@@ -271,27 +271,41 @@ export const legalDisclaimer = [
 
 export const loginContent = {
   title: "Accedi",
-  description: "Entra nella tua area riservata con il tuo account Google.",
-  button: "Continua con Google",
+  description: "Entra nella tua area riservata con email e password.",
+  button: "Accedi",
   switchPrompt: "Non hai ancora un account?",
   switchLink: "Registrati",
 };
 
 export const registerContent = {
   title: "Crea il tuo account",
-  description:
-    "Bastano pochi secondi: usiamo il tuo account Google, così non devi scegliere né ricordare un'altra password.",
-  button: "Registrati con Google",
+  description: "Serve solo un indirizzo email valido e una password.",
+  button: "Crea account",
   switchPrompt: "Hai già un account?",
   switchLink: "Accedi",
-  /** Mostrato sotto al pulsante: l'utente sta comunque creando un account. */
+  passwordHint: "Almeno 8 caratteri.",
+  /** Mostrato sotto al modulo: l'utente sta comunque creando un account. */
   legalNote:
     "Proseguendo accetti i Termini e condizioni e la Privacy Policy. Questa è una versione dimostrativa: non inserire dati sensibili.",
+};
+
+export const authFormLabels = {
+  email: "Email",
+  emailPlaceholder: "nome@esempio.it",
+  password: "Password",
+  pending: "Attendi…",
 };
 
 export const authErrors = {
   callback: "Accesso non riuscito. Riprova.",
   notConfigured: "L'accesso non è ancora attivo: manca la configurazione del servizio di autenticazione.",
+  missingFields: "Inserisci email e password.",
+  invalidEmail: "Inserisci un indirizzo email valido.",
+  weakPassword: "La password deve avere almeno 8 caratteri.",
+  /** Volutamente generico: non rivela quali email siano già registrate. */
+  badCredentials: "Email o password non corretti.",
+  signUpFailed: "Registrazione non riuscita. Controlla i dati e riprova.",
+  confirmEmail: "Ti abbiamo inviato un'email di conferma: aprila per attivare l'account.",
 };
 
 export const dashboardContent = {

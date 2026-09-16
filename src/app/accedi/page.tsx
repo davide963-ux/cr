@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { signInAction } from "@/app/auth/actions";
 import { AuthNotConfigured, AuthShell } from "@/components/auth/AuthShell";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { EmailPasswordForm } from "@/components/auth/EmailPasswordForm";
 import { authErrors, loginContent } from "@/data/content";
 import { AFTER_LOGIN_PATH, isSupabaseConfigured } from "@/lib/supabase/config";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -34,7 +35,12 @@ export default async function LoginPage({
       ) : null}
 
       {isSupabaseConfigured() ? (
-        <GoogleSignInButton label={loginContent.button} next={next} />
+        <EmailPasswordForm
+          action={signInAction}
+          submitLabel={loginContent.button}
+          passwordAutoComplete="current-password"
+          next={next}
+        />
       ) : (
         <AuthNotConfigured message={authErrors.notConfigured} />
       )}

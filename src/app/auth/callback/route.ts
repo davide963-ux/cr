@@ -3,8 +3,8 @@ import { AFTER_LOGIN_PATH, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
- * Ritorno da Google: Supabase rimanda qui con un `code` monouso, che viene
- * scambiato per una sessione salvata in cookie httpOnly.
+ * Ritorno dal link di conferma dell'email: Supabase rimanda qui con un `code`
+ * monouso, che viene scambiato per una sessione salvata in cookie httpOnly.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
