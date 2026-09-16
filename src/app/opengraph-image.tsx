@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { siteConfig } from "@/data/site";
+import { siteConfig } from "@/data/content";
 
 export const alt = `${siteConfig.name} — Piattaforma per i mercati crypto`;
 export const size = { width: 1200, height: 630 };

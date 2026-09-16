@@ -16,7 +16,7 @@ export async function Statistics() {
           id="stats-title"
           title={statsContent.title}
           description={statsContent.description}
-          aside={hasDemo ? <DemoBadge label="Valori dimostrativi da sostituire" /> : null}
+          aside={hasDemo ? <DemoBadge label={statsContent.demoBadgeLabel} /> : null}
         />
 
         <dl className="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius-panel)] border border-line bg-line min-[440px]:grid-cols-2 xl:grid-cols-5">

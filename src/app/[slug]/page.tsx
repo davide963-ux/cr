@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PlaceholderPage } from "@/components/pages/PlaceholderPage";
-import { isPlaceholderSlug, placeholderPages } from "@/data/navigation";
+import { isPlaceholderSlug, placeholderPages } from "@/data/content";
 
 // Solo gli slug configurati: qualsiasi altro percorso restituisce 404
 export const dynamicParams = false;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { siteConfig } from "@/data/site";
+import { siteConfig } from "@/data/content";
 
 /** Logo segnaposto: sostituire marchio e nome con quelli definitivi. */
 export function Logo({ onClick }: { onClick?: () => void }) {

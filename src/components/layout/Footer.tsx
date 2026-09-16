@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
-import { legalDisclaimer } from "@/data/content";
-import { footerNav } from "@/data/navigation";
-import { siteConfig } from "@/data/site";
+import { footerNav, legalDisclaimer, siteConfig } from "@/data/content";
 import { Logo } from "./Logo";
 
 export function Footer() {
