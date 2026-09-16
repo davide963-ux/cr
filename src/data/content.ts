@@ -290,8 +290,13 @@ export const registerContent = {
 };
 
 export const authFormLabels = {
+  firstName: "Nome",
+  lastName: "Cognome",
   email: "Email",
   emailPlaceholder: "nome@esempio.it",
+  phone: "Telefono",
+  phonePlaceholder: "+39 333 1234567",
+  city: "Città",
   password: "Password",
   pending: "Attendi…",
 };
@@ -302,6 +307,8 @@ export const authErrors = {
   missingFields: "Inserisci email e password.",
   invalidEmail: "Inserisci un indirizzo email valido.",
   weakPassword: "La password deve avere almeno 8 caratteri.",
+  missingProfileFields: "Compila nome, cognome, telefono e città.",
+  invalidPhone: "Inserisci un numero di telefono valido.",
   /** Volutamente generico: non rivela quali email siano già registrate. */
   badCredentials: "Email o password non corretti.",
   signUpFailed: "Registrazione non riuscita. Controlla i dati e riprova.",

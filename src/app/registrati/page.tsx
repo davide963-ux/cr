@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { signUpAction } from "@/app/auth/actions";
 import { AuthNotConfigured, AuthShell } from "@/components/auth/AuthShell";
-import { EmailPasswordForm } from "@/components/auth/EmailPasswordForm";
+import { SignUpForm } from "@/components/auth/SignUpForm";
 import { authErrors, registerContent } from "@/data/content";
 import { AFTER_LOGIN_PATH, isSupabaseConfigured } from "@/lib/supabase/config";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -25,14 +24,10 @@ export default async function RegisterPage() {
       footerLabel={registerContent.switchLink}
       footerHref="/accedi"
       note={registerContent.legalNote}
+      wide
     >
       {isSupabaseConfigured() ? (
-        <EmailPasswordForm
-          action={signUpAction}
-          submitLabel={registerContent.button}
-          passwordAutoComplete="new-password"
-          passwordHint={registerContent.passwordHint}
-        />
+        <SignUpForm />
       ) : (
         <AuthNotConfigured message={authErrors.notConfigured} />
       )}
