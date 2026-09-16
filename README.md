@@ -126,24 +126,26 @@ sequenceDiagram
 
 ## Accesso e registrazione
 
-Accesso con Google tramite Supabase. Nessuna password da custodire: la sessione
-vive in cookie httpOnly gestiti da `@supabase/ssr`.
+Email e password tramite Supabase. La sessione vive in cookie httpOnly gestiti
+da `@supabase/ssr`; la password viaggia solo in una Server Action e non passa
+mai dal JavaScript del client.
 
 ```mermaid
 sequenceDiagram
     participant U as Utente
-    participant S as Sito
+    participant S as Server Action
     participant SB as Supabase
-    participant G as Google
 
-    U->>S: /accedi → "Continua con Google"
-    S->>SB: signInWithOAuth({ provider: "google" })
-    SB->>G: redirect
-    G-->>SB: utente autenticato
-    SB-->>S: redirect a /auth/callback?code=…
-    S->>SB: exchangeCodeForSession(code)
-    SB-->>S: sessione → cookie httpOnly
-    S-->>U: redirect a /dashboard
+    U->>S: modulo email + password
+    S->>S: validazione (email, lunghezza password)
+    alt registrazione
+        S->>SB: signUp()
+        SB-->>S: sessione, oppure "conferma l'email"
+    else accesso
+        S->>SB: signInWithPassword()
+        SB-->>S: sessione, oppure errore
+    end
+    S-->>U: cookie httpOnly → /dashboard
 ```
 
 - **`src/proxy.ts`** — in Next 16 il vecchio `middleware` si chiama `proxy`.
@@ -151,14 +153,20 @@ sequenceDiagram
 - **Doppia serratura**: oltre al proxy, `/dashboard` verifica la sessione lato
   server con `getUser()`, che valida il token contro Supabase invece di fidarsi
   del cookie.
-- **Registrarsi e accedere sono la stessa azione**: con il solo login Google,
-  al primo ingresso Supabase crea l'utente. Le due pagine restano separate solo
-  per il testo.
+- **Errore unico per le credenziali sbagliate** ("Email o password non corretti"):
+  un messaggio diverso per "utente inesistente" direbbe a chiunque quali indirizzi
+  sono registrati.
+- **Conferma dell'email**: se è attiva su Supabase, dopo la registrazione non
+  parte la sessione e compare l'avviso di controllare la posta; il link di
+  conferma rientra da `/auth/callback`. Disattivandola (Authentication →
+  Sign In / Providers → Email → *Confirm email*) l'accesso è immediato.
 - **Senza le chiavi configurate** il sito funziona lo stesso: `/accedi` e
-  `/registrati` mostrano un avviso al posto del pulsante, e la build non si rompe.
+  `/registrati` mostrano un avviso al posto del modulo, e la build non si rompe.
 
-Configurazione: vedi `.env.example`. Per attivare Google serve anche un progetto
-Google Cloud collegato in Supabase → Authentication → Providers → Google.
+> ⚠️ Soluzione provvisoria: mancano ancora recupero password, limitazione dei
+> tentativi e requisiti di robustezza oltre agli 8 caratteri minimi.
+
+Configurazione: vedi `.env.example`.
 
 ## Dove modificare i contenuti
 
@@ -187,7 +195,7 @@ Il resto sono elenchi di dati, tenuti separati:
 3. **Statistiche e recensioni**: tutte marcate come dimostrative, tranne "Blockchain supportate" (derivata dalla configurazione) e i **prezzi crypto** (reali, via TradingView).
    I termini d'uso dei widget richiedono l'attribuzione visibile a TradingView: è il link `TradingViewCredit`, da non rimuovere.
 4. **Indicizzazione**: con `demoMode: true` il sito è `noindex` e `robots.txt` blocca tutto.
-5. **Autenticazione**: accesso con Google via Supabase, sessione in cookie httpOnly. Vedi [Accesso e registrazione](#accesso-e-registrazione). Prima di aprire le registrazioni al pubblico servono privacy policy e termini reali (oggi sono segnaposto).
+5. **Autenticazione**: email e password via Supabase, sessione in cookie httpOnly. Provvisoria: manca il recupero password. Vedi [Accesso e registrazione](#accesso-e-registrazione). Prima di aprire le registrazioni al pubblico servono privacy policy e termini reali (oggi sono segnaposto).
 6. **Testi legali e disclaimer**: segnaposto da far redigere al consulente legale (quadro MiCA / autorità italiane).
 7. **Sicurezza**: header di base in `next.config.ts`. Aggiungere una Content-Security-Policy con nonce quando verranno integrati servizi esterni.
 8. **Loghi di crypto e chain**: sono monogrammi neutri. Per i loghi ufficiali servono asset con licenza.
