@@ -2,8 +2,7 @@ import { Icon } from "@/components/icons/Icon";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { toolsContent } from "@/data/content";
-import { features } from "@/data/features";
+import { features, toolsContent } from "@/data/content";
 import { cn } from "@/lib/cn";
 
 /**

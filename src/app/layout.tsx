@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
-import { siteConfig } from "@/data/site";
+import { siteConfig } from "@/data/content";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),

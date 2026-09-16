@@ -5,7 +5,7 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { authLinks, mainNav } from "@/data/navigation";
+import { authLinks, mainNav } from "@/data/content";
 import { useScrolled } from "@/hooks/useScrolled";
 import { cn } from "@/lib/cn";
 import { Logo } from "./Logo";

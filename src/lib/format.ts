@@ -1,4 +1,4 @@
-import { siteConfig } from "@/data/site";
+import { siteConfig } from "@/data/content";
 
 const { locale, currency } = siteConfig;
 

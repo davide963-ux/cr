@@ -1,8 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { howItWorksContent } from "@/data/content";
-import { steps } from "@/data/steps";
+import { howItWorksContent, steps } from "@/data/content";
 
 /**
  * Timeline: verticale su mobile (linea a sinistra), orizzontale da lg

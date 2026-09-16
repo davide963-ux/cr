@@ -1,8 +1,7 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { Reveal } from "@/components/ui/Reveal";
-import { finalCtaContent } from "@/data/content";
-import { authLinks } from "@/data/navigation";
+import { authLinks, finalCtaContent } from "@/data/content";
 
 export function FinalCTA() {
   return (

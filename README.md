@@ -126,17 +126,21 @@ sequenceDiagram
 
 ## Dove modificare i contenuti
 
+**Quasi tutti i testi del sito stanno in un unico file: [`src/data/content.ts`](src/data/content.ts).**
+Le sezioni sono nell'ordine in cui compaiono nella pagina, dall'alto verso il basso:
+nome azienda, menu, hero, titoli di ogni sezione, funzionalità, passaggi, footer e
+testo legale. Per cambiare una scritta basta modificare quello che sta fra virgolette.
+
+Il resto sono elenchi di dati, tenuti separati:
+
 | Cosa | File |
 | --- | --- |
-| Nome azienda, URL, modalità demo | `src/data/site.ts` |
-| Testi di tutte le sezioni, disclaimer | `src/data/content.ts` |
-| Menu e footer, pagine segnaposto | `src/data/navigation.ts` |
+| **Tutti i testi, menu e footer** | **`src/data/content.ts`** |
 | Asset in homepage, simboli TradingView (`tvSymbol`) | `src/data/assets.ts` |
 | Config dei widget di quotazione | `BitcoinCard.tsx`, `CryptoMarketGrid.tsx` |
 | Componente di embed TradingView | `src/components/ui/TradingViewWidget.tsx` |
 | Quotazioni demo (solo per `/api/market` con `MARKET_DATA_PROVIDER=mock`) | `src/data/market.mock.ts` |
 | Blockchain (il diagramma si adatta da solo) | `src/data/chains.ts` |
-| Funzionalità, passaggi | `src/data/features.ts`, `src/data/steps.ts` |
 | Statistiche (`isDemo`, `source`) | `src/data/stats.mock.ts` |
 | Recensioni | `src/data/reviews.mock.ts` → `src/services/content/reviewsService.ts` |
 

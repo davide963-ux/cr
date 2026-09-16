@@ -1,7 +1,6 @@
 import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { heroContent } from "@/data/content";
-import { authLinks } from "@/data/navigation";
+import { authLinks, heroContent } from "@/data/content";
 
 /**
  * Tracciato decorativo (non un dato di mercato): una linea che attraversa

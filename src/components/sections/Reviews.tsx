@@ -57,7 +57,7 @@ export async function Reviews() {
         <SectionHeader
           id="reviews-title"
           title={reviewsContent.title}
-          aside={isDemo ? <DemoBadge label="Recensioni dimostrative" /> : null}
+          aside={isDemo ? <DemoBadge label={reviewsContent.demoBadgeLabel} /> : null}
         />
         {isDemo ? <p className="mt-4 max-w-xl text-sm text-mist">{reviewsContent.demoNote}</p> : null}
 
