@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Design tokens ───────────────────────── */
+@theme {
+  --color-ink: #050807;          /* sfondo */
+  --color-panel: #0d1512;        /* pannelli */
+  --color-panel-raised: #111c18; /* pannelli annidati / hover */
+  --color-line: #1a2722;         /* bordi sottili */
+  --color-line-strong: #274036;  /* bordi attivi */
+  --color-mint: #67e3ae;         /* accento primario */
+  --color-jade: #39b982;         /* accento secondario */
+  --color-mist: #7f9189;         /* testo secondario */
+  --color-paper: #e6edea;        /* testo primario */
+  --color-loss: #e38b7b;         /* variazioni negative (tono attenuato) */
+
+  --font-sans: "Mona Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-panel: 1.25rem;
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 24px 48px -24px rgb(0 0 0 / 0.7);
+
+  --animate-draw: draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) 0.35s both;
+  --animate-rise: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-travel: travel 4.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+
+  @keyframes draw {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes travel {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+}
+
+/* Tipografia display: larghezza espansa del font variabile Mona Sans */
+@utility font-display {
+  font-stretch: 118%;
+  font-weight: 560;
+  letter-spacing: -0.03em;
+}
+
+@utility font-wide {
+  font-stretch: 112%;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@utility panel {
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
+}
+
+/* Reticolo tecnico dell'hero, sfumato ai bordi */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(103 227 174 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(103 227 174 / 0.06) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 70% 60% at 30% 20%, black 20%, transparent 75%);
+}
+
+/* ───────────────────────── Base ───────────────────────── */
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: clip;
+  }
+
+  /* Le ancore non finiscono sotto la navbar sticky */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  ::selection {
+    background: rgb(103 227 174 / 0.28);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-mint);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+/* ───────────────────────── Motion ───────────────────────── */
+
+/* Reveal allo scroll: nascosto solo se JS è attivo e l'utente accetta il movimento */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal][data-visible="true"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scroll orizzontale senza barra visibile (carosello mobile) */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
