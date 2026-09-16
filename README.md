@@ -4,9 +4,9 @@ Homepage in italiano per una piattaforma crypto/fintech.
 Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4.
 
 > ⚠️ **Versione dimostrativa.** Statistiche e recensioni sono dati di esempio, etichettati
-> come tali nell'interfaccia. I **prezzi crypto sono reali e in tempo reale** (CoinGecko),
-> vedi [Prezzi in tempo reale](#prezzi-crypto-in-tempo-reale). Il resto va sostituito con
-> dati verificati prima della pubblicazione.
+> come tali nell'interfaccia. I **prezzi crypto sono reali e in tempo reale** (widget
+> TradingView), vedi [Prezzi in tempo reale](#prezzi-crypto-in-tempo-reale). Il resto va
+> sostituito con dati verificati prima della pubblicazione.
 
 ## Avvio
 
@@ -36,70 +36,78 @@ Requisiti: Node.js 20.9 o superiore.
 
 ```mermaid
 flowchart TD
-    ENV[".env.local (solo server)"] --> SVC
+    REG["data/assets.ts<br/>assetRegistry: symbol, name, tint, tvSymbol"]
+    REG --> FM["FeaturedMarket → BitcoinCard"]
+    REG --> MB["MarketBoard → CryptoMarketGrid"]
+    FM --> TVW["TradingViewWidget (Client Component)"]
+    MB --> TVW
+    TVW -->|"script embed-widget-*.js"| TV[("TradingView<br/>quotazioni in tempo reale")]
+    PAGE["app/page.tsx (statica)"] --> FM
+    PAGE --> MB
+
     subgraph Server["Solo server — import 'server-only'"]
-        SVC["marketDataService.getMarketSnapshot()<br/>React cache(): una fetch per richiesta<br/>ISR: revalidate 30s"]
-        SVC -->|"default / MARKET_DATA_PROVIDER=coingecko"| CG["coingeckoProvider<br/>(prezzi REALI, isDemo=false)"]
-        SVC -->|MARKET_DATA_PROVIDER=mock| MOCK["mockProvider (dati di esempio)"]
-        SVC -->|MARKET_DATA_PROVIDER=http| HTTP["httpProvider (template per un altro fornitore)"]
+        SVC["marketDataService.getMarketSnapshot()"]
+        SVC --> CG["coingeckoProvider"]
+        SVC --> MOCK["mockProvider"]
+        SVC --> HTTP["httpProvider (template)"]
         REV["reviewsService"]
         STA["statsService"]
     end
-    CG -->|"HTTPS: api.coingecko.com/coins/markets"| CGAPI[("CoinGecko")]
-    SVC -->|"MarketResult ok / error"| BLK["FeaturedMarket / MarketBoard<br/>(Server Components async, primo render)"]
-    BLK -->|ok| LIVE["LiveBitcoinCard / LiveMarketGrid<br/>(Client Components)"]
-    LIVE -->|"useLiveMarket(): fetch ogni 30s"| API["GET /api/market"]
-    API --> SVC
-    LIVE --> UI["BitcoinCard / CryptoMarketGrid"]
-    BLK -->|error| ERR["MarketError"]
-    PAGE["app/page.tsx"] -->|Suspense| SK["MarketSkeleton"]
-    PAGE --> BLK
+    SVC --> API["GET /api/market<br/>(endpoint disponibile, non usato dalla homepage)"]
 ```
 
-La UI dipende solo dai tipi in `src/services/market/types.ts`, mai dai dati mock.
+I prezzi della homepage non passano più dal server: nessuna chiave API, nessun rate
+limit, nessuna chiamata che possa fallire in produzione. Il layer
+`src/services/market/` resta disponibile dietro `/api/market` per chi volesse tornare a
+card disegnate in casa (vedi [Tornare alle card con dati propri](#tornare-alle-card-con-dati-propri)).
 
 ### Prezzi crypto in tempo reale
 
-Le card (scheda BTC in evidenza e griglia asset) mostrano quotazioni **reali**, non demo:
+Le card (scheda BTC in evidenza e griglia asset) mostrano quotazioni **reali** servite
+dai widget TradingView, che girano nel browser del visitatore:
 
-1. **Provider di default: CoinGecko.** `coingeckoProvider` (`src/services/market/providers/coingeckoProvider.ts`)
-   chiama `GET /coins/markets` per gli asset in `src/data/assets.ts` (i cui `providerId`
-   — `bitcoin`, `ethereum`, `solana`, `binancecoin`, `ripple`, `cardano` — sono già gli ID
-   CoinGecko) e normalizza la risposta nel tipo `MarketAsset` interno, senza mai fidarsi
-   della forma dei dati esterni. Non serve una chiave API: se impostata,
-   `COINGECKO_API_KEY` viene inviata come header per un rate limit più alto.
-2. **Primo render lato server (SSR/ISR).** `FeaturedMarket`/`MarketBoard` chiamano
-   `getMarketSnapshot()` come prima: HTML già pronto con i prezzi correnti, cache ISR
-   di `MARKET_DATA_REVALIDATE_SECONDS` (default 30s) per non superare i rate limit.
-3. **Aggiornamento lato client senza reload.** Da lì in poi entrano in gioco i wrapper
-   client `LiveBitcoinCard` e `LiveMarketGrid`: l'hook `useLiveMarket`
-   (`src/hooks/useLiveMarket.ts`) interroga `GET /api/market` ogni 30s (e subito quando
-   la scheda torna visibile) e aggiorna lo stato React — le card presentazionali
-   (`BitcoinCard`, `CryptoMarketGrid`) restano invariate, ricevono solo dati più freschi.
-   In caso di rete assente il badge passa da "Tempo reale" a "In pausa" mantenendo
-   l'ultimo prezzo valido, senza mai rompere la UI.
+1. **Un solo componente di embed.** `TradingViewWidget`
+   (`src/components/ui/TradingViewWidget.tsx`) riceve il nome dell'embed e la config
+   nel formato ufficiale TradingView. Lo `<script>` va creato via DOM e non reso da
+   React (React non esegue gli script resi come figli, e l'embed legge la config dal
+   contenuto testuale del proprio tag); il container resta vuoto lato React, così il
+   cleanup lo svuota senza toccare nodi gestiti da React — necessario con
+   `reactStrictMode`, che in sviluppo monta gli effetti due volte.
+2. **Un simbolo per asset, in un posto solo.** `tvSymbol` in `src/data/assets.ts`
+   (`BINANCE:BTCUSDT`, `BINANCE:ETHUSDT`, …). Cambiare exchange o coppia significa
+   modificare quella riga e basta.
+3. **Due widget.** Scheda in evidenza → `symbol-overview` (prezzo, variazione, grafico
+   ad area). Ogni card della griglia → `mini-symbol-overview` (prezzo, variazione, mini
+   grafico). La cornice del sito (pannello, monogrammi, tipografia, header di sezione)
+   resta quella di prima: TradingView riempie solo la parte dati.
 
 ```mermaid
 sequenceDiagram
-    participant B as Browser (idratato)
-    participant H as useLiveMarket (client)
-    participant A as GET /api/market
-    participant S as marketDataService (cache per richiesta)
-    participant CG as CoinGecko
+    participant N as Next (build)
+    participant B as Browser
+    participant TV as TradingView
 
-    Note over B: HTML iniziale già con prezzi SSR
-    loop ogni 30s o al ritorno di visibilità della scheda
-        H->>A: fetch('/api/market')
-        A->>S: getMarketSnapshot()
-        S->>CG: GET /coins/markets?ids=...&sparkline=true
-        CG-->>S: prezzi, variazione 24h, sparkline
-        S-->>A: MarketSnapshot (o errore)
-        A-->>H: JSON
-        H->>B: setState → BitcoinCard/CryptoMarketGrid si ri-renderizzano
-    end
+    N->>B: HTML statico (cornice, monogrammi, header)
+    Note over N: nessuna chiamata di rete lato server
+    B->>B: useEffect monta <script> embed-widget-*.js<br/>con la config dell'asset
+    B->>TV: lo script richiede il widget
+    TV-->>B: iframe con prezzo, variazione e grafico
+    Note over B,TV: da qui in poi TradingView aggiorna<br/>le quotazioni da solo, in streaming
 ```
 
-Per tornare ai dati di esempio (sviluppo offline, demo senza rete): `MARKET_DATA_PROVIDER=mock`.
+Cambiare widget o config = sostituire l'oggetto `config` passato a `TradingViewWidget`
+con quello generato dal [widget builder di TradingView](https://www.tradingview.com/widget/).
+
+### Tornare alle card con dati propri
+
+Il layer `src/services/market/` (provider CoinGecko / mock / HTTP, tipi, endpoint
+`/api/market`) è intatto e funzionante: serve se un giorno si vuole tornare a card
+disegnate in casa, con capitalizzazione e volumi che i widget non espongono. In quel
+caso i componenti presentazionali originali (`Sparkline`, `PriceChart`, `ChangeBadge`,
+`MarketState`) sono ancora nel repo, e le variabili `MARKET_DATA_*` / `COINGECKO_API_KEY`
+tornano rilevanti. Attenzione: sul piano gratuito senza chiave, CoinGecko rifiuta spesso
+le richieste dagli IP dei datacenter (Vercel incluso) — con quel percorso serve una
+chiave API.
 
 ### Rendering della pagina
 
@@ -110,31 +118,11 @@ sequenceDiagram
     participant S as marketDataService
     N->>S: getMarketSnapshot()
     S-->>N: { featured, assets, isDemo }
-    N->>B: HTML statico (prezzi e grafici SVG già disegnati)
-    B->>B: Idratazione delle sole parti client:<br/>Navbar, Reveal, AnimatedCounter, Live*MarketCard
+    N->>B: HTML statico (cornice delle card, nessun prezzo dal server)
+    B->>B: Idratazione delle sole parti client:<br/>Navbar, Reveal, AnimatedCounter, TradingViewWidget
     B->>B: IntersectionObserver → animazione contatori<br/>(textContent via rAF, nessun re-render)
-    B->>B: useLiveMarket → polling /api/market ogni 30s<br/>(vedi "Prezzi crypto in tempo reale")
+    B->>B: I widget TradingView caricano le quotazioni<br/>(vedi "Prezzi crypto in tempo reale")
 ```
-
-## Usare un altro provider di mercato
-
-Il provider di default è CoinGecko. Per collegare un fornitore diverso (es. l'API di un
-exchange) invece che modificare `coingeckoProvider.ts`:
-
-```mermaid
-flowchart LR
-    A["Scegliere il provider"] --> B["Adattare normalizeAsset()<br/>in httpProvider.ts (template)"]
-    B --> C["Allineare providerId<br/>in data/assets.ts"]
-    C --> D["MARKET_DATA_PROVIDER=http<br/>+ MARKET_DATA_API_URL/API_KEY"]
-```
-
-- La chiave API resta sul server (niente prefisso `NEXT_PUBLIC_`).
-- `MARKET_DATA_REVALIDATE_SECONDS` controlla la cache ISR lato server (default 30s).
-- Gli aggiornamenti lato client passano sempre da `/api/market` (mai dal provider
-  direttamente): è già collegato da `useLiveMarket`, nessuna modifica necessaria lì.
-- Se il provider fallisce, la pagina mostra uno stato d'errore (testato con
-  `MARKET_DATA_PROVIDER=http` senza URL, oppure disattivando la rete: CoinGecko
-  degrada allo stesso modo).
 
 ## Dove modificare i contenuti
 
@@ -143,10 +131,10 @@ flowchart LR
 | Nome azienda, URL, modalità demo | `src/data/site.ts` |
 | Testi di tutte le sezioni, disclaimer | `src/data/content.ts` |
 | Menu e footer, pagine segnaposto | `src/data/navigation.ts` |
-| Asset in homepage (`providerId` = ID CoinGecko) | `src/data/assets.ts` |
-| Quotazioni demo (usate solo con `MARKET_DATA_PROVIDER=mock`) | `src/data/market.mock.ts` |
-| Provider prezzi reali (CoinGecko) | `src/services/market/providers/coingeckoProvider.ts` |
-| Polling client dei prezzi | `src/hooks/useLiveMarket.ts` |
+| Asset in homepage, simboli TradingView (`tvSymbol`) | `src/data/assets.ts` |
+| Config dei widget di quotazione | `BitcoinCard.tsx`, `CryptoMarketGrid.tsx` |
+| Componente di embed TradingView | `src/components/ui/TradingViewWidget.tsx` |
+| Quotazioni demo (solo per `/api/market` con `MARKET_DATA_PROVIDER=mock`) | `src/data/market.mock.ts` |
 | Blockchain (il diagramma si adatta da solo) | `src/data/chains.ts` |
 | Funzionalità, passaggi | `src/data/features.ts`, `src/data/steps.ts` |
 | Statistiche (`isDemo`, `source`) | `src/data/stats.mock.ts` |
@@ -156,7 +144,8 @@ flowchart LR
 
 1. **"Tasso di successo comprovato."** (`content.ts`): "comprovato" afferma una prova. La metrica si mostra solo se `verifiedMetric` include una fonte.
 2. **"Regolamento rapido"** (`features.ts`): sostituisce "istantaneo" finché non è tecnicamente verificato.
-3. **Statistiche e recensioni**: tutte marcate come dimostrative, tranne "Blockchain supportate" (derivata dalla configurazione) e i **prezzi crypto** (reali, via CoinGecko).
+3. **Statistiche e recensioni**: tutte marcate come dimostrative, tranne "Blockchain supportate" (derivata dalla configurazione) e i **prezzi crypto** (reali, via TradingView).
+   I termini d'uso dei widget richiedono l'attribuzione visibile a TradingView: è il link `TradingViewCredit`, da non rimuovere.
 4. **Indicizzazione**: con `demoMode: true` il sito è `noindex` e `robots.txt` blocca tutto.
 5. **Autenticazione**: `/accedi` e `/registrati` sono pagine informative, senza form finti. Integrare un sistema reale lato server (sessioni sicure, cookie httpOnly).
 6. **Testi legali e disclaimer**: segnaposto da far redigere al consulente legale (quadro MiCA / autorità italiane).
@@ -165,9 +154,8 @@ flowchart LR
 
 ## Scelte tecniche
 
-- **Prezzi in tempo reale**: CoinGecko come provider di default, SSR/ISR (30s) per il primo render, poi polling client via `useLiveMarket` — vedi [Prezzi crypto in tempo reale](#prezzi-crypto-in-tempo-reale).
-- **Grafici**: SVG puro renderizzato sul server, nessuna libreria di charting, zero JS nel client.
-- **Serie mock**: PRNG deterministico, quindi server e client producono lo stesso output (nessun hydration mismatch). Usata solo con `MARKET_DATA_PROVIDER=mock`.
+- **Prezzi in tempo reale**: widget TradingView lato client — nessuna chiave API, nessun rate limit, nessuna chiamata dal server che possa fallire. Vedi [Prezzi crypto in tempo reale](#prezzi-crypto-in-tempo-reale).
+- **Grafici**: i grafici delle quotazioni arrivano dai widget. Gli altri grafici del sito restano SVG puro renderizzato sul server, senza librerie di charting.
 - **Contatori**: il server rende il valore finale (SEO e no-JS); il client anima via `requestAnimationFrame` scrivendo `textContent`.
 - **Animazioni**: rispettano `prefers-reduced-motion`. I reveal nascondono il contenuto solo se JS è attivo (`@media (scripting: enabled)`).
 - **Font**: Mona Sans Variable auto-ospitato via npm, nessuna richiesta a Google Fonts.
