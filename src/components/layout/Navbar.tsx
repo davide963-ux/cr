@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
+import { AuthNavLinks } from "@/components/auth/AuthNavLinks";
 import { Icon } from "@/components/icons/Icon";
-import { ButtonLink } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
-import { authLinks, mainNav } from "@/data/content";
+import { mainNav } from "@/data/content";
 import { useScrolled } from "@/hooks/useScrolled";
 import { cn } from "@/lib/cn";
 import { Logo } from "./Logo";
@@ -61,14 +61,7 @@ export function Navbar() {
           </ul>
         </nav>
 
-        <div className="hidden items-center gap-2 lg:flex">
-          <ButtonLink href={authLinks.login.href} variant="ghost" size="sm">
-            {authLinks.login.label}
-          </ButtonLink>
-          <ButtonLink href={authLinks.register.href} variant="primary" size="sm">
-            {authLinks.register.label}
-          </ButtonLink>
-        </div>
+        <AuthNavLinks size="sm" className="hidden lg:flex" />
 
         <button
           type="button"
@@ -103,14 +96,7 @@ export function Navbar() {
               ))}
             </ul>
           </nav>
-          <div className="mt-auto grid grid-cols-2 gap-3 pt-8">
-            <ButtonLink href={authLinks.login.href} variant="secondary" size="lg" onClick={close}>
-              {authLinks.login.label}
-            </ButtonLink>
-            <ButtonLink href={authLinks.register.href} variant="primary" size="lg" onClick={close}>
-              {authLinks.register.label}
-            </ButtonLink>
-          </div>
+          <AuthNavLinks size="lg" onNavigate={close} className="mt-auto pt-8" />
         </Container>
       </div>
     </header>

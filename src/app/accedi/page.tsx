@@ -1,17 +1,43 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/pages/PlaceholderPage";
+import { redirect } from "next/navigation";
+import { AuthNotConfigured, AuthShell } from "@/components/auth/AuthShell";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { authErrors, loginContent } from "@/data/content";
+import { AFTER_LOGIN_PATH, isSupabaseConfigured } from "@/lib/supabase/config";
+import { getCurrentUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Accedi", robots: { index: false } };
 
-/**
- * Nessun form di login finto: l'autenticazione reale (es. Auth.js, Clerk,
- * provider OIDC) verrà integrata lato server con sessioni sicure.
- */
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; errore?: string }>;
+}) {
+  const { next, errore } = await searchParams;
+
+  if (isSupabaseConfigured() && (await getCurrentUser())) {
+    redirect(AFTER_LOGIN_PATH);
+  }
+
   return (
-    <PlaceholderPage title="Accedi">
-      <p>L&apos;area riservata non è ancora attiva.</p>
-      <p>L&apos;accesso sarà disponibile al lancio della piattaforma.</p>
-    </PlaceholderPage>
+    <AuthShell
+      title={loginContent.title}
+      description={loginContent.description}
+      footerPrompt={loginContent.switchPrompt}
+      footerLabel={loginContent.switchLink}
+      footerHref="/registrati"
+    >
+      {errore ? (
+        <p role="alert" className="mb-4 text-sm text-loss">
+          {authErrors.callback}
+        </p>
+      ) : null}
+
+      {isSupabaseConfigured() ? (
+        <GoogleSignInButton label={loginContent.button} next={next} />
+      ) : (
+        <AuthNotConfigured message={authErrors.notConfigured} />
+      )}
+    </AuthShell>
   );
 }

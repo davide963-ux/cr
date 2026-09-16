@@ -30,3 +30,18 @@ interface ButtonLinkProps extends ComponentProps<typeof Link> {
 export function ButtonLink({ variant = "primary", size = "md", className, ...props }: ButtonLinkProps) {
   return <Link className={cn(base, variants[variant], sizes[size], className)} {...props} />;
 }
+
+interface ButtonProps extends ComponentProps<"button"> {
+  variant?: Variant;
+  size?: Size;
+}
+
+export function Button({ variant = "primary", size = "md", className, type = "button", ...props }: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cn(base, variants[variant], sizes[size], "disabled:pointer-events-none disabled:opacity-60", className)}
+      {...props}
+    />
+  );
+}
