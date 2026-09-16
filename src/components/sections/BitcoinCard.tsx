@@ -1,11 +1,14 @@
 import { CoinMark } from "@/components/ui/CoinMark";
-import { TradingViewCredit, TradingViewWidget } from "@/components/ui/TradingViewWidget";
+import { CoinMarketCapCredit, CoinMarketCapWidget } from "@/components/ui/CoinMarketCapWidget";
 import { FEATURED_ASSET } from "@/data/assets";
+
+/** ID CoinMarketCap di Bitcoin. */
+const CMC_BITCOIN_ID = "1";
 
 /**
  * Scheda di mercato in evidenza. La cornice resta quella del sito (pannello,
- * monogramma, tipografia); le quotazioni arrivano in tempo reale dallo screener
- * TradingView, che gira nel browser del visitatore.
+ * monogramma, tipografia); prezzo, rank, capitalizzazione e volume arrivano in
+ * tempo reale dal widget CoinMarketCap.
  */
 export function BitcoinCard() {
   return (
@@ -20,26 +23,16 @@ export function BitcoinCard() {
             <p className="text-sm text-mist">{FEATURED_ASSET.symbol} / USD</p>
           </div>
         </div>
-        <TradingViewCredit
-          href="https://www.tradingview.com/markets/cryptocurrencies/prices-all/"
-          label="Crypto markets by TradingView"
-        />
+        <CoinMarketCapCredit />
       </header>
 
-      <TradingViewWidget
-        widget="screener"
-        className="w-full p-2 sm:p-4"
-        config={{
-          defaultColumn: "overview",
-          screener_type: "crypto_mkt",
-          displayCurrency: "USD",
-          colorTheme: "light",
-          isTransparent: false,
-          locale: "en",
-          width: "100%",
-          height: 550,
-        }}
-      />
+      <div className="p-6 sm:p-8">
+        <CoinMarketCapWidget
+          currencyId={CMC_BITCOIN_ID}
+          base="USD"
+          className="overflow-hidden rounded-[var(--radius-card)] [&_iframe]:block [&_iframe]:w-full"
+        />
+      </div>
     </article>
   );
 }
