@@ -4,8 +4,8 @@ import { FEATURED_ASSET } from "@/data/assets";
 
 /**
  * Scheda di mercato in evidenza. La cornice resta quella del sito (pannello,
- * monogramma, tipografia); prezzo, variazione e grafico arrivano in tempo reale
- * dal widget TradingView, che gira nel browser del visitatore.
+ * monogramma, tipografia); le quotazioni arrivano in tempo reale dallo screener
+ * TradingView, che gira nel browser del visitatore.
  */
 export function BitcoinCard() {
   return (
@@ -17,34 +17,27 @@ export function BitcoinCard() {
             <h2 id="featured-asset-title" className="font-wide text-lg font-semibold leading-tight text-paper">
               {FEATURED_ASSET.name}
             </h2>
-            <p className="text-sm text-mist">{FEATURED_ASSET.symbol} / USDT</p>
+            <p className="text-sm text-mist">{FEATURED_ASSET.symbol} / USD</p>
           </div>
         </div>
-        <TradingViewCredit />
+        <TradingViewCredit
+          href="https://www.tradingview.com/markets/cryptocurrencies/prices-all/"
+          label="Crypto markets by TradingView"
+        />
       </header>
 
       <TradingViewWidget
-        widget="symbol-overview"
-        className="h-[380px] w-full p-2 sm:h-[440px] sm:p-4"
+        widget="screener"
+        className="w-full p-2 sm:p-4"
         config={{
-          symbols: [[FEATURED_ASSET.name, `${FEATURED_ASSET.tvSymbol}|1D`]],
-          chartOnly: false,
-          locale: "it",
-          colorTheme: "dark",
-          isTransparent: true,
-          autosize: true,
-          showVolume: false,
-          showMA: false,
-          hideDateRanges: false,
-          hideMarketStatus: false,
-          hideSymbolLogo: false,
-          scalePosition: "right",
-          scaleMode: "Normal",
-          fontFamily: "inherit",
-          fontSize: "12",
-          chartType: "area",
-          lineWidth: 2,
-          gridLineColor: "rgba(255, 255, 255, 0.06)",
+          defaultColumn: "overview",
+          screener_type: "crypto_mkt",
+          displayCurrency: "USD",
+          colorTheme: "light",
+          isTransparent: false,
+          locale: "en",
+          width: "100%",
+          height: 550,
         }}
       />
     </article>

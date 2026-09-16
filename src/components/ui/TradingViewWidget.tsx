@@ -47,16 +47,26 @@ export function TradingViewWidget({ widget, config, className }: TradingViewWidg
   return <div ref={containerRef} className={cn("tradingview-widget-container", className)} />;
 }
 
+interface TradingViewCreditProps {
+  href?: string;
+  label?: string;
+  className?: string;
+}
+
 /** Attribuzione richiesta dai termini d'uso dei widget TradingView. */
-export function TradingViewCredit({ className }: { className?: string }) {
+export function TradingViewCredit({
+  href = "https://www.tradingview.com/",
+  label = "Quotazioni fornite da TradingView",
+  className,
+}: TradingViewCreditProps) {
   return (
     <a
-      href="https://www.tradingview.com/"
+      href={href}
       target="_blank"
       rel="noopener nofollow"
       className={cn("text-xs text-mist transition-colors hover:text-paper", className)}
     >
-      Quotazioni fornite da TradingView
+      {label}
     </a>
   );
 }
