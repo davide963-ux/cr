@@ -124,6 +124,42 @@ sequenceDiagram
     B->>B: I widget TradingView caricano le quotazioni<br/>(vedi "Prezzi crypto in tempo reale")
 ```
 
+## Accesso e registrazione
+
+Accesso con Google tramite Supabase. Nessuna password da custodire: la sessione
+vive in cookie httpOnly gestiti da `@supabase/ssr`.
+
+```mermaid
+sequenceDiagram
+    participant U as Utente
+    participant S as Sito
+    participant SB as Supabase
+    participant G as Google
+
+    U->>S: /accedi → "Continua con Google"
+    S->>SB: signInWithOAuth({ provider: "google" })
+    SB->>G: redirect
+    G-->>SB: utente autenticato
+    SB-->>S: redirect a /auth/callback?code=…
+    S->>SB: exchangeCodeForSession(code)
+    SB-->>S: sessione → cookie httpOnly
+    S-->>U: redirect a /dashboard
+```
+
+- **`src/proxy.ts`** — in Next 16 il vecchio `middleware` si chiama `proxy`.
+  Rinnova i cookie di sessione a ogni richiesta e blocca `/dashboard` agli anonimi.
+- **Doppia serratura**: oltre al proxy, `/dashboard` verifica la sessione lato
+  server con `getUser()`, che valida il token contro Supabase invece di fidarsi
+  del cookie.
+- **Registrarsi e accedere sono la stessa azione**: con il solo login Google,
+  al primo ingresso Supabase crea l'utente. Le due pagine restano separate solo
+  per il testo.
+- **Senza le chiavi configurate** il sito funziona lo stesso: `/accedi` e
+  `/registrati` mostrano un avviso al posto del pulsante, e la build non si rompe.
+
+Configurazione: vedi `.env.example`. Per attivare Google serve anche un progetto
+Google Cloud collegato in Supabase → Authentication → Providers → Google.
+
 ## Dove modificare i contenuti
 
 **Quasi tutti i testi del sito stanno in un unico file: [`src/data/content.ts`](src/data/content.ts).**
@@ -151,7 +187,7 @@ Il resto sono elenchi di dati, tenuti separati:
 3. **Statistiche e recensioni**: tutte marcate come dimostrative, tranne "Blockchain supportate" (derivata dalla configurazione) e i **prezzi crypto** (reali, via TradingView).
    I termini d'uso dei widget richiedono l'attribuzione visibile a TradingView: è il link `TradingViewCredit`, da non rimuovere.
 4. **Indicizzazione**: con `demoMode: true` il sito è `noindex` e `robots.txt` blocca tutto.
-5. **Autenticazione**: `/accedi` e `/registrati` sono pagine informative, senza form finti. Integrare un sistema reale lato server (sessioni sicure, cookie httpOnly).
+5. **Autenticazione**: accesso con Google via Supabase, sessione in cookie httpOnly. Vedi [Accesso e registrazione](#accesso-e-registrazione). Prima di aprire le registrazioni al pubblico servono privacy policy e termini reali (oggi sono segnaposto).
 6. **Testi legali e disclaimer**: segnaposto da far redigere al consulente legale (quadro MiCA / autorità italiane).
 7. **Sicurezza**: header di base in `next.config.ts`. Aggiungere una Content-Security-Policy con nonce quando verranno integrati servizi esterni.
 8. **Loghi di crypto e chain**: sono monogrammi neutri. Per i loghi ufficiali servono asset con licenza.

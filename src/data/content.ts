@@ -266,6 +266,42 @@ export const legalDisclaimer = [
 ];
 
 /* ===========================================================================
+ * 14. PAGINE DI ACCESSO E REGISTRAZIONE
+ * =========================================================================== */
+
+export const loginContent = {
+  title: "Accedi",
+  description: "Entra nella tua area riservata con il tuo account Google.",
+  button: "Continua con Google",
+  switchPrompt: "Non hai ancora un account?",
+  switchLink: "Registrati",
+};
+
+export const registerContent = {
+  title: "Crea il tuo account",
+  description:
+    "Bastano pochi secondi: usiamo il tuo account Google, così non devi scegliere né ricordare un'altra password.",
+  button: "Registrati con Google",
+  switchPrompt: "Hai già un account?",
+  switchLink: "Accedi",
+  /** Mostrato sotto al pulsante: l'utente sta comunque creando un account. */
+  legalNote:
+    "Proseguendo accetti i Termini e condizioni e la Privacy Policy. Questa è una versione dimostrativa: non inserire dati sensibili.",
+};
+
+export const authErrors = {
+  callback: "Accesso non riuscito. Riprova.",
+  notConfigured: "L'accesso non è ancora attivo: manca la configurazione del servizio di autenticazione.",
+};
+
+export const dashboardContent = {
+  title: "La tua area riservata",
+  welcome: "Bentornato",
+  description: "Qui comparirà la tua dashboard. Per ora l'accesso funziona: sei autenticato.",
+  signOut: "Esci",
+};
+
+/* ===========================================================================
  * TIPI E FUNZIONI DI SUPPORTO — non serve modificarli per cambiare i testi.
  * =========================================================================== */
 
