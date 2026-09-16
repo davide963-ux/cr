@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { FEATURED_ASSET_ID, HOMEPAGE_ASSET_IDS } from "@/data/assets";
+import { coingeckoProvider } from "./providers/coingeckoProvider";
 import { httpProvider } from "./providers/httpProvider";
 import { mockProvider } from "./providers/mockProvider";
 import type { MarketDataProvider, MarketResult } from "./types";
@@ -8,19 +9,21 @@ import type { MarketDataProvider, MarketResult } from "./types";
 /**
  * Punto d'ingresso unico per i dati di mercato.
  * Selezione del provider tramite variabile d'ambiente (solo server):
- *   MARKET_DATA_PROVIDER=mock | http
+ *   MARKET_DATA_PROVIDER=coingecko (default, quotazioni reali) | mock | http
  */
 function resolveProvider(): MarketDataProvider {
   switch (process.env.MARKET_DATA_PROVIDER) {
+    case "mock":
+      return mockProvider;
     case "http":
       return httpProvider;
-    case "mock":
+    case "coingecko":
     case undefined:
     case "":
-      return mockProvider;
+      return coingeckoProvider;
     default:
-      console.warn(`MARKET_DATA_PROVIDER sconosciuto: "${process.env.MARKET_DATA_PROVIDER}". Uso mock.`);
-      return mockProvider;
+      console.warn(`MARKET_DATA_PROVIDER sconosciuto: "${process.env.MARKET_DATA_PROVIDER}". Uso coingecko.`);
+      return coingeckoProvider;
   }
 }
 

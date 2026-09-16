@@ -1,0 +1,21 @@
+# Dipendenze
+/node_modules
+
+# Build Next.js
+/.next/
+/out/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Variabili d'ambiente locali (mai committare segreti)
+.env
+.env.local
+.env.*.local
+
+# File generati automaticamente da strumenti AI/agent (non sorgente del progetto)
+AGENTS.md
+CLAUDE.md
+
+# Editor / OS
+.DS_Store
+*.log

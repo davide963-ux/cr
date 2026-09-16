@@ -9,18 +9,22 @@ export interface AssetDefinition {
   name: string;
   /** Colore della monogramma (identità neutra, non il logo ufficiale). */
   tint: string;
+  /** Simbolo usato dai widget TradingView che mostrano le quotazioni. */
+  tvSymbol: string;
 }
 
 export const FEATURED_ASSET_ID = "bitcoin";
 
 export const assetRegistry: AssetDefinition[] = [
-  { providerId: "bitcoin", symbol: "BTC", name: "Bitcoin", tint: "#E9A24B" },
-  { providerId: "ethereum", symbol: "ETH", name: "Ethereum", tint: "#9AA8E8" },
-  { providerId: "solana", symbol: "SOL", name: "Solana", tint: "#B58CF0" },
-  { providerId: "binancecoin", symbol: "BNB", name: "BNB", tint: "#E8C24A" },
-  { providerId: "ripple", symbol: "XRP", name: "XRP", tint: "#B9C4C9" },
-  { providerId: "cardano", symbol: "ADA", name: "Cardano", tint: "#6FA3E8" },
+  { providerId: "bitcoin", symbol: "BTC", name: "Bitcoin", tint: "#E9A24B", tvSymbol: "BINANCE:BTCUSDT" },
+  { providerId: "ethereum", symbol: "ETH", name: "Ethereum", tint: "#9AA8E8", tvSymbol: "BINANCE:ETHUSDT" },
+  { providerId: "solana", symbol: "SOL", name: "Solana", tint: "#B58CF0", tvSymbol: "BINANCE:SOLUSDT" },
+  { providerId: "binancecoin", symbol: "BNB", name: "BNB", tint: "#E8C24A", tvSymbol: "BINANCE:BNBUSDT" },
+  { providerId: "ripple", symbol: "XRP", name: "XRP", tint: "#B9C4C9", tvSymbol: "BINANCE:XRPUSDT" },
+  { providerId: "cardano", symbol: "ADA", name: "Cardano", tint: "#6FA3E8", tvSymbol: "BINANCE:ADAUSDT" },
 ];
+
+export const FEATURED_ASSET = assetRegistry.find((a) => a.providerId === FEATURED_ASSET_ID)!;
 
 export const HOMEPAGE_ASSET_IDS = assetRegistry.map((a) => a.providerId);
 
