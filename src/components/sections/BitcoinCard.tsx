@@ -1,6 +1,7 @@
 import { ChangeBadge } from "@/components/ui/ChangeBadge";
 import { CoinMark } from "@/components/ui/CoinMark";
 import { DemoBadge } from "@/components/ui/DemoBadge";
+import { LiveBadge } from "@/components/ui/LiveBadge";
 import { getAssetDefinition } from "@/data/assets";
 import { formatCompactCurrency, formatDateTime, formatPrice, splitPrice } from "@/lib/format";
 import type { MarketAsset } from "@/services/market/types";
@@ -9,10 +10,12 @@ import { PriceChart } from "./PriceChart";
 interface BitcoinCardProps {
   asset: MarketAsset;
   isDemo: boolean;
+  /** Presente solo lato client: stato del polling su /api/market. */
+  isLive?: boolean;
 }
 
 /** Scheda di mercato in evidenza. Presentazionale: riceve i dati già normalizzati. */
-export function BitcoinCard({ asset, isDemo }: BitcoinCardProps) {
+export function BitcoinCard({ asset, isDemo, isLive }: BitcoinCardProps) {
   const def = getAssetDefinition(asset.id);
   const { main, fraction } = splitPrice(asset.priceUsd);
   const positive = asset.change24hPct >= 0;
@@ -38,6 +41,7 @@ export function BitcoinCard({ asset, isDemo }: BitcoinCardProps) {
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-mist">
           {isDemo ? <DemoBadge /> : null}
+          {!isDemo && isLive !== undefined ? <LiveBadge stale={!isLive} /> : null}
           <span>
             Aggiornato <time dateTime={asset.updatedAt}>{formatDateTime(asset.updatedAt)}</time>
           </span>

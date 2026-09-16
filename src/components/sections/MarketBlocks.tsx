@@ -5,18 +5,19 @@ import { MarketError } from "@/components/ui/MarketState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { marketContent } from "@/data/content";
 import { getMarketSnapshot } from "@/services/market/marketDataService";
-import { BitcoinCard } from "./BitcoinCard";
-import { CryptoMarketGrid } from "./CryptoMarketGrid";
+import { LiveBitcoinCard } from "./LiveBitcoinCard";
+import { LiveMarketGrid } from "./LiveMarketGrid";
 
 /**
- * Server Component asincroni: leggono i dati dal service e delegano
- * la resa ai componenti presentazionali. Sono avvolti in <Suspense>
- * nella pagina, così uno skeleton appare mentre i dati arrivano.
+ * Server Component asincroni: leggono i dati dal service per il primo
+ * render (SEO/no-JS) e li passano ai wrapper client `Live*`, che li
+ * mantengono aggiornati via polling su /api/market. Sono avvolti in
+ * <Suspense> nella pagina, così uno skeleton appare mentre arrivano.
  */
 export async function FeaturedMarket() {
   const result = await getMarketSnapshot();
   if (result.status === "error") return <MarketError message={result.message} />;
-  return <BitcoinCard asset={result.data.featured} isDemo={result.data.isDemo} />;
+  return <LiveBitcoinCard initial={result.data} />;
 }
 
 export async function MarketBoard() {
@@ -33,7 +34,7 @@ export async function MarketBoard() {
         {result.status === "error" ? (
           <MarketError message={result.message} />
         ) : (
-          <CryptoMarketGrid assets={result.data.assets} />
+          <LiveMarketGrid initial={result.data} />
         )}
       </div>
     </>
