@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Container } from "@/components/ui/Container";
+import { cn } from "@/lib/cn";
 
 interface AuthShellProps {
   title: string;
@@ -10,6 +11,8 @@ interface AuthShellProps {
   footerLabel: string;
   footerHref: string;
   note?: string;
+  /** La registrazione ha più campi e sta meglio su una colonna più larga. */
+  wide?: boolean;
 }
 
 /** Cornice condivisa dalle pagine di accesso e registrazione. */
@@ -21,10 +24,11 @@ export function AuthShell({
   footerLabel,
   footerHref,
   note,
+  wide = false,
 }: AuthShellProps) {
   return (
     <Container className="flex min-h-[70vh] items-center justify-center py-20">
-      <div className="panel w-full max-w-md p-8 sm:p-10">
+      <div className={cn("panel w-full p-8 sm:p-10", wide ? "max-w-xl" : "max-w-md")}>
         <h1 className="font-display text-[clamp(1.75rem,4vw,2.5rem)] leading-tight text-paper">{title}</h1>
         <p className="mt-3 text-mist">{description}</p>
 

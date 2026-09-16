@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { signInAction } from "@/app/auth/actions";
 import { AuthNotConfigured, AuthShell } from "@/components/auth/AuthShell";
-import { EmailPasswordForm } from "@/components/auth/EmailPasswordForm";
+import { SignInForm } from "@/components/auth/SignInForm";
 import { authErrors, loginContent } from "@/data/content";
 import { AFTER_LOGIN_PATH, isSupabaseConfigured } from "@/lib/supabase/config";
 import { getCurrentUser } from "@/lib/supabase/server";
@@ -35,12 +34,7 @@ export default async function LoginPage({
       ) : null}
 
       {isSupabaseConfigured() ? (
-        <EmailPasswordForm
-          action={signInAction}
-          submitLabel={loginContent.button}
-          passwordAutoComplete="current-password"
-          next={next}
-        />
+        <SignInForm next={next} />
       ) : (
         <AuthNotConfigured message={authErrors.notConfigured} />
       )}

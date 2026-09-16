@@ -156,6 +156,13 @@ sequenceDiagram
 - **Errore unico per le credenziali sbagliate** ("Email o password non corretti"):
   un messaggio diverso per "utente inesistente" direbbe a chiunque quali indirizzi
   sono registrati.
+- **Dati raccolti alla registrazione** (nome, cognome, telefono, città) finiscono
+  in `user_metadata` sull'utente Supabase: nessuna tabella da creare, si vedono
+  in Authentication → Users e l'area riservata li rilegge da lì.
+  ⚠️ `user_metadata` è modificabile dall'utente stesso via API: va bene per
+  mostrare un nome, non per decisioni di sicurezza. Quando serviranno dati
+  affidabili — o interrogabili in SQL — vanno spostati in una tabella `profiles`
+  con RLS, popolata da un trigger su `auth.users`.
 - **Conferma dell'email**: se è attiva su Supabase, dopo la registrazione non
   parte la sessione e compare l'avviso di controllare la posta; il link di
   conferma rientra da `/auth/callback`. Disattivandola (Authentication →
