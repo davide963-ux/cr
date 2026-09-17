@@ -1,0 +1,45 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Card, DataRow } from "@/components/dashboard/Card";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { PlaceholderAction } from "@/components/dashboard/PlaceholderAction";
+import { WalletCard } from "@/components/dashboard/WalletCard";
+import { walletPage } from "@/data/content";
+import { formatAmount } from "@/lib/format";
+import { getAccount } from "@/services/account/accountService";
+
+export const metadata: Metadata = { title: "Portafoglio" };
+
+export default async function PortfolioPage() {
+  const account = await getAccount();
+  if (!account) notFound();
+
+  return (
+    <div className="space-y-8">
+      <DashboardHeader title={walletPage.title} />
+
+      {/* Stessi dati della dashboard: entrambe leggono da getAccount() */}
+      <Card>
+        <dl>
+          <DataRow label={walletPage.usernameLabel} value={account.username || null} />
+          <DataRow label={walletPage.balanceLabel} value={formatAmount(account.balance, account.currency)} />
+        </dl>
+      </Card>
+
+      <WalletCard
+        account={account}
+        title={walletPage.manageTitle}
+        addressLabel={walletPage.addressLabel}
+        emptyLabel={walletPage.addressEmpty}
+        note={walletPage.exportNote}
+        action={
+          <PlaceholderAction
+            label={walletPage.exportKey}
+            modalTitle={walletPage.exportModalTitle}
+            modalBody={walletPage.exportModalBody}
+          />
+        }
+      />
+    </div>
+  );
+}
