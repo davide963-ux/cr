@@ -31,7 +31,7 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   locale: "it-IT",
   ogLocale: "it_IT",
-  currency: "USD",
+  currency: "EUR",
   copyrightYear: 2026,
   /** true finché il sito mostra dati dimostrativi: abilita i badge "Dati dimostrativi". */
   demoMode: true,
@@ -299,7 +299,7 @@ export const authFormLabels = {
   city: "Città",
   amount: "La somma",
   amountPlaceholder: "1000",
-  amountHint: "Importo indicativo in USD. Nessun pagamento viene richiesto ora.",
+  amountHint: "Importo indicativo in EUR. Nessun pagamento viene richiesto ora.",
   password: "Password",
   pending: "Attendi…",
 };
@@ -353,6 +353,10 @@ export const dashboardHome = {
   balanceLabel: "Saldo disponibile",
   currencyLabel: "Valuta",
   balanceNote: "Il saldo sarà aggiornato quando il sistema di pagamenti sarà collegato.",
+  btcLoading: "Conversione in corso…",
+  btcUnavailable: "Conversione in bitcoin non disponibile al momento.",
+  /** `{rate}` viene sostituito col cambio usato per il calcolo. */
+  btcRate: "1 BTC = {rate} · valore indicativo",
   walletTitle: "Il tuo wallet",
   walletAddressLabel: "Indirizzo wallet",
   walletEmpty: "Wallet non ancora configurato",

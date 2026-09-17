@@ -20,7 +20,7 @@ export function BitcoinCard() {
             <h2 id="featured-asset-title" className="font-wide text-lg font-semibold leading-tight text-paper">
               {FEATURED_ASSET.name}
             </h2>
-            <p className="text-sm text-mist">{FEATURED_ASSET.symbol} / USD</p>
+            <p className="text-sm text-mist">{FEATURED_ASSET.symbol} / EUR</p>
           </div>
         </div>
         <CoinMarketCapCredit />
@@ -29,7 +29,7 @@ export function BitcoinCard() {
       <div className="p-6 sm:p-8">
         <CoinMarketCapWidget
           currencyId={CMC_BITCOIN_ID}
-          base="USD"
+          base="EUR"
           className="overflow-hidden rounded-[var(--radius-card)] [&_iframe]:block [&_iframe]:w-full"
         />
       </div>

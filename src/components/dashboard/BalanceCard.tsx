@@ -1,6 +1,7 @@
 import { dashboardHome } from "@/data/content";
 import { formatAmount } from "@/lib/format";
 import type { AccountUser } from "@/services/account/types";
+import { BtcEquivalent } from "./BtcEquivalent";
 
 /**
  * Saldo del conto. Il valore arriva dall'oggetto account, mai scritto a mano:
@@ -15,6 +16,7 @@ export function BalanceCard({ account }: { account: AccountUser }) {
           <p className="font-display tabular mt-3 text-[clamp(2.5rem,6vw,3.75rem)] leading-none text-paper">
             {formatAmount(account.balance, account.currency)}
           </p>
+          <BtcEquivalent balance={account.balance} currency={account.currency} />
         </div>
         <div className="rounded-[var(--radius-card)] border border-line bg-panel-raised px-4 py-3">
           <p className="text-xs text-mist">{dashboardHome.currencyLabel}</p>
