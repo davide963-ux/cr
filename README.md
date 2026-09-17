@@ -216,6 +216,40 @@ flowchart LR
 - **Voce di menu attiva**: vince la corrispondenza più lunga, altrimenti
   `/dashboard` resterebbe acceso su ogni sottopagina.
 
+## Amministrazione e saldi
+
+`/dashboard/admin`, visibile solo a chi ha `is_admin` nel database. Serve al
+caso concreto: un deposito che per un problema tecnico non risulta accreditato,
+e va sistemato a mano lasciando traccia.
+
+**Prima di usarlo** va eseguita una volta `supabase/migrations/0001_profiles_and_ledger.sql`
+nell'SQL Editor di Supabase, e poi nominato il primo amministratore:
+
+```sql
+update public.profiles set is_admin = true where email = 'tua@email.it';
+```
+
+Finché la migrazione non è stata eseguita il sito continua a funzionare: la
+dashboard mostra un avviso al posto del saldo, invece di un numero inventato.
+
+- **Il saldo non sta in `user_metadata`.** Quel campo è modificabile dall'utente
+  stesso via API: chiunque potrebbe assegnarsi il denaro che vuole. Vive nella
+  tabella `profiles`, su cui l'app non ha alcun permesso di scrittura diretta.
+- **Importi in centesimi interi** (`bigint`), mai in virgola mobile: `0.1 + 0.2`
+  non fa `0.3`. La conversione da testo a centesimi (`src/lib/money.ts`) separa
+  le cifre come stringhe e rifiuta gli input ambigui — `"1.234"` può valere
+  milleduecentotrentaquattro o uno virgola due tre quattro, e sbagliare
+  significherebbe sbagliare di mille volte.
+- **Saldo e registro cambiano insieme**, dentro `admin_adjust_balance`: una sola
+  transazione, quindi o si scrivono entrambi o nessuno dei due.
+- **Il controllo sul ruolo è nel database**, non nell'interfaccia. Nascondere la
+  voce di menu è ordine, non sicurezza: a fermare davvero una chiamata sono le
+  policy RLS e il controllo dentro la funzione SQL, che un client non può
+  aggirare nemmeno parlando direttamente con Supabase.
+- **Il registro è in sola aggiunta**: ogni movimento conserva importo, saldo
+  risultante, motivo obbligatorio, chi l'ha fatto e quando.
+- Un amministratore non può revocare sé stesso: lo impedisce la funzione SQL.
+
 ## Dove modificare i contenuti
 
 **Quasi tutti i testi del sito stanno in un unico file: [`src/data/content.ts`](src/data/content.ts).**

@@ -1,4 +1,4 @@
-import { dashboardHome } from "@/data/content";
+import { adminPage, dashboardHome } from "@/data/content";
 import { formatAmount } from "@/lib/format";
 import type { AccountUser } from "@/services/account/types";
 import { BtcEquivalent } from "./BtcEquivalent";
@@ -16,14 +16,18 @@ export function BalanceCard({ account }: { account: AccountUser }) {
           <p className="font-display tabular mt-3 text-[clamp(2.5rem,6vw,3.75rem)] leading-none text-paper">
             {formatAmount(account.balance, account.currency)}
           </p>
-          <BtcEquivalent balance={account.balance} currency={account.currency} />
+          {account.profileReady ? (
+            <BtcEquivalent balance={account.balance} currency={account.currency} />
+          ) : null}
         </div>
         <div className="rounded-[var(--radius-card)] border border-line bg-panel-raised px-4 py-3">
           <p className="text-xs text-mist">{dashboardHome.currencyLabel}</p>
           <p className="font-wide mt-0.5 text-[0.9375rem] font-medium text-paper">{account.currency}</p>
         </div>
       </div>
-      <p className="border-t border-line px-6 py-4 text-xs text-mist sm:px-8">{dashboardHome.balanceNote}</p>
+      <p className="border-t border-line px-6 py-4 text-xs text-mist sm:px-8">
+        {account.profileReady ? dashboardHome.balanceNote : adminPage.migrationBody}
+      </p>
     </section>
   );
 }

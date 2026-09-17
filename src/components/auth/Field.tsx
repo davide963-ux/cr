@@ -4,21 +4,24 @@ import { cn } from "@/lib/cn";
 const control =
   "mt-1.5 h-11 w-full rounded-[var(--radius-control)] border border-line-strong bg-panel px-3.5 text-paper outline-none transition-colors placeholder:text-mist/60 focus:border-mint/60";
 
-interface FieldProps extends Omit<ComponentProps<"input">, "id"> {
+interface FieldProps extends ComponentProps<"input"> {
   name: string;
   label: string;
   hint?: string;
+  /** Da passare quando la stessa pagina ha più moduli con lo stesso `name`. */
+  id?: string;
 }
 
 /** Campo di modulo: etichetta collegata, più un suggerimento opzionale. */
-export function Field({ name, label, hint, className, ...props }: FieldProps) {
-  const hintId = hint ? `${name}-hint` : undefined;
+export function Field({ name, label, hint, className, id, ...props }: FieldProps) {
+  const fieldId = id ?? name;
+  const hintId = hint ? `${fieldId}-hint` : undefined;
   return (
     <div className={className}>
-      <label htmlFor={name} className="text-sm font-medium text-paper">
+      <label htmlFor={fieldId} className="text-sm font-medium text-paper">
         {label}
       </label>
-      <input id={name} name={name} className={control} aria-describedby={hintId} {...props} />
+      <input id={fieldId} name={name} className={control} aria-describedby={hintId} {...props} />
       {hint ? (
         <p id={hintId} className="mt-1.5 text-xs text-mist">
           {hint}
