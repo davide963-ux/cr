@@ -2,8 +2,6 @@ import "@fontsource-variable/mona-sans/wdth.css";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Footer } from "@/components/layout/Footer";
-import { Navbar } from "@/components/layout/Navbar";
 import { siteConfig } from "@/data/content";
 
 export const metadata: Metadata = {
@@ -47,11 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           Vai al contenuto
         </a>
-        <Navbar />
-        <main id="contenuto" tabIndex={-1} className="outline-none">
-          {children}
-        </main>
-        <Footer />
+        {children}
       </body>
     </html>
   );

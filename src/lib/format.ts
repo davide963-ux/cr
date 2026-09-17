@@ -37,6 +37,23 @@ export function splitPrice(value: number): { main: string; fraction: string } {
   return { main: formatted.slice(0, idx), fraction: formatted.slice(idx) };
 }
 
+const amountFormatters = new Map<string, Intl.NumberFormat>();
+
+/** Importo in una valuta esplicita, es. formatAmount(0, "EUR") → 0,00 € */
+export function formatAmount(value: number, currencyCode: string): string {
+  let fmt = amountFormatters.get(currencyCode);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    amountFormatters.set(currencyCode, fmt);
+  }
+  return fmt.format(value);
+}
+
 const compactCurrency = new Intl.NumberFormat(locale, {
   style: "currency",
   currency,

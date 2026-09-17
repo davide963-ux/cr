@@ -1,0 +1,134 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Icon } from "@/components/icons/Icon";
+import { Logo } from "@/components/layout/Logo";
+import { dashboardNav, dashboardShell } from "@/data/content";
+import { cn } from "@/lib/cn";
+
+/**
+ * Vince la corrispondenza più lunga: "/dashboard" è prefisso di ogni
+ * sottopagina, quindi senza questo confronto resterebbe sempre acceso.
+ */
+function activeHref(pathname: string): string | undefined {
+  return dashboardNav
+    .map((item) => item.href)
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((a, b) => b.length - a.length)[0];
+}
+
+function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const current = activeHref(pathname);
+  return (
+    <ul className="space-y-1">
+      {dashboardNav.map((item) => {
+        const active = item.href === current;
+        return (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              onClick={onNavigate}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-3 rounded-[var(--radius-control)] border px-3 py-2.5 text-[0.9375rem] transition-colors duration-200",
+                active
+                  ? "border-mint/25 bg-mint/[0.08] font-medium text-mint"
+                  : "border-transparent text-mist hover:bg-panel-raised hover:text-paper",
+              )}
+            >
+              <Icon name={item.icon} size={18} className="shrink-0" />
+              {item.label}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function SignOut({ full = false }: { full?: boolean }) {
+  return (
+    <form action="/auth/signout" method="post">
+      <button
+        type="submit"
+        className={cn(
+          "flex items-center gap-3 rounded-[var(--radius-control)] px-3 py-2.5 text-[0.9375rem] text-mist transition-colors duration-200 hover:bg-panel-raised hover:text-paper",
+          full && "w-full",
+        )}
+      >
+        <Icon name="logout" size={18} className="shrink-0" />
+        {dashboardShell.signOut}
+      </button>
+    </form>
+  );
+}
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Il drawer si chiude dai link stessi (onNavigate), da Esc e oltre il
+  // breakpoint lg: non serve un effetto sul pathname.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onMq = (e: MediaQueryListEvent) => e.matches && setOpen(false);
+    const prevOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    mq.addEventListener("change", onMq);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+      mq.removeEventListener("change", onMq);
+    };
+  }, [open]);
+
+  return (
+    <>
+      {/* Barra mobile */}
+      <div className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-line bg-ink/90 px-5 backdrop-blur-md lg:hidden">
+        <Logo />
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? dashboardShell.menuClose : dashboardShell.menuOpen}
+          className="-mr-2 grid size-11 place-items-center rounded-lg text-paper"
+        >
+          <Icon name={open ? "close" : "menu"} size={22} />
+        </button>
+      </div>
+
+      {/* Drawer mobile */}
+      <div
+        hidden={!open}
+        className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto border-t border-line bg-ink px-5 py-6 lg:hidden"
+      >
+        <nav aria-label={dashboardShell.navLabel}>
+          <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+        </nav>
+        <div className="mt-6 border-t border-line pt-4">
+          <SignOut full />
+        </div>
+      </div>
+
+      {/* Sidebar desktop */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[17rem] flex-col border-r border-line bg-panel px-4 py-6 lg:flex">
+        <div className="px-3">
+          <Logo />
+        </div>
+        <nav aria-label={dashboardShell.navLabel} className="mt-8 flex-1">
+          <NavLinks pathname={pathname} />
+        </nav>
+        <div className="border-t border-line pt-4">
+          <SignOut full />
+        </div>
+      </aside>
+    </>
+  );
+}

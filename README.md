@@ -175,6 +175,41 @@ sequenceDiagram
 
 Configurazione: vedi `.env.example`.
 
+## Area riservata
+
+Sei pagine sotto `/dashboard`, con sidebar fissa da `lg` in su e drawer sotto.
+Stessi token di colore del sito pubblico: nessun valore esadecimale nuovo.
+
+```mermaid
+flowchart LR
+    SB[("Supabase<br/>user + user_metadata")] --> AS["accountService.getAccount()<br/>→ AccountUser"]
+    AS --> D["/dashboard"]
+    AS --> P["/dashboard/portafoglio"]
+    AS --> PR["/dashboard/profilo"]
+    AS -.->|nessun dato utente| AN["/dashboard/analitiche"]
+    AS -.->|nessun dato utente| SE["/dashboard/sicurezza"]
+    AS -.->|nessun dato utente| DO["/dashboard/documentazione"]
+```
+
+- **Una sola fonte dei dati**: `src/services/account/accountService.ts` traduce
+  l'utente Supabase in `AccountUser`. Username e saldo non sono mai riscritti a
+  mano in una pagina: quando arriverà un backend di pagamenti cambia solo quel file.
+- **Saldo 0, wallet null, nessun movimento**: non esiste ancora un sistema di
+  pagamenti, quindi le pagine mostrano stati vuoti dichiarati invece di numeri o
+  indirizzi inventati. Su una piattaforma finanziaria un dato finto è peggio di
+  uno spazio vuoto.
+- **Azioni non ancora collegate** (Deposita, Esporta chiave, Modifica profilo,
+  Modifica password, Configura 2FA) usano un unico `PlaceholderAction`, che apre
+  una modale dicendo apertamente che la funzione non è attiva.
+- **Caricamento documenti**: solo lato client. I file restano in memoria, non
+  vengono inviati a nessun server e **non** finiscono in `localStorage`; non ne
+  viene generata alcuna anteprima, quindi il contenuto non viene mai interpretato
+  dal browser. Tipo e dimensione sono filtrati (PNG/JPG/PDF, max 10 MB), ma il
+  tipo dichiarato dal browser non è una garanzia: la verifica vera andrà fatta
+  lato server quando ci sarà uno storage autenticato e privato.
+- **Voce di menu attiva**: vince la corrispondenza più lunga, altrimenti
+  `/dashboard` resterebbe acceso su ogni sottopagina.
+
 ## Dove modificare i contenuti
 
 **Quasi tutti i testi del sito stanno in un unico file: [`src/data/content.ts`](src/data/content.ts).**

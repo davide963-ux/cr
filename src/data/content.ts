@@ -327,8 +327,134 @@ export const dashboardContent = {
 };
 
 /* ===========================================================================
+ * 15. AREA RISERVATA (dashboard)
+ * =========================================================================== */
+
+/** Voci del menu laterale. `href` decide anche quale voce risulta attiva. */
+export const dashboardNav: DashboardNavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: "home" },
+  { label: "Portafoglio", href: "/dashboard/portafoglio", icon: "wallet" },
+  { label: "Analitiche", href: "/dashboard/analitiche", icon: "chart" },
+  { label: "Profilo", href: "/dashboard/profilo", icon: "user" },
+  { label: "Sicurezza", href: "/dashboard/sicurezza", icon: "shield" },
+  { label: "Documentazione", href: "/dashboard/documentazione", icon: "document" },
+];
+
+export const dashboardShell = {
+  menuOpen: "Apri il menu",
+  menuClose: "Chiudi il menu",
+  navLabel: "Navigazione area riservata",
+  signOut: "Esci",
+};
+
+export const dashboardHome = {
+  title: "Dashboard",
+  welcome: "Benvenuto",
+  balanceLabel: "Saldo disponibile",
+  currencyLabel: "Valuta",
+  balanceNote: "Il saldo sarà aggiornato quando il sistema di pagamenti sarà collegato.",
+  walletTitle: "Il tuo wallet",
+  walletAddressLabel: "Indirizzo wallet",
+  walletEmpty: "Wallet non ancora configurato",
+  deposit: "Deposita",
+  depositModalTitle: "Deposito non ancora disponibile",
+  depositModalBody:
+    "La funzione di deposito sarà attiva quando il sistema wallet sarà collegato. Nessun pagamento viene elaborato in questa versione.",
+};
+
+export const walletPage = {
+  title: "Il tuo portafoglio",
+  usernameLabel: "Username",
+  balanceLabel: "Saldo",
+  manageTitle: "Gestione wallet",
+  addressLabel: "Indirizzo wallet",
+  addressEmpty: "Wallet non ancora configurato",
+  exportKey: "Esporta chiave",
+  exportNote: "Funzionalità wallet in fase di configurazione.",
+  exportModalTitle: "Esportazione chiave non disponibile",
+  exportModalBody:
+    "L'esportazione della chiave sarà possibile solo quando il sistema wallet sarà collegato, con le dovute verifiche di sicurezza. Nessuna chiave viene generata o conservata in questa versione.",
+};
+
+export const analyticsPage = {
+  title: "Analitiche",
+  description: "Le metriche compariranno qui man mano che il conto registrerà attività.",
+  emptyState: "Dati disponibili quando saranno presenti attività sul conto.",
+  cards: [
+    { id: "performance", title: "Performance" },
+    { id: "movimenti", title: "Movimenti" },
+    { id: "distribuzione", title: "Distribuzione del portafoglio" },
+    { id: "attivita", title: "Attività" },
+    { id: "storico", title: "Storico" },
+  ],
+};
+
+export const profilePage = {
+  title: "Profilo",
+  personalTitle: "Informazioni personali",
+  preferencesTitle: "Preferenze",
+  accountTitle: "Dati dell'account",
+  edit: "Modifica profilo",
+  editModalTitle: "Modifica del profilo non ancora disponibile",
+  editModalBody: "La modifica dei dati sarà attiva in una prossima versione.",
+  empty: "Non impostato",
+  fields: {
+    username: "Username",
+    email: "Email",
+    firstName: "Nome",
+    lastName: "Cognome",
+    phone: "Telefono",
+    city: "Città",
+    currency: "Valuta",
+    declaredAmount: "Somma indicata alla registrazione",
+  },
+  preferencesEmpty: "Nessuna preferenza da configurare al momento.",
+};
+
+export const securityPage = {
+  title: "Sicurezza",
+  passwordTitle: "Password",
+  passwordMask: "••••••••••",
+  passwordButton: "Modifica password",
+  passwordModalTitle: "Modifica password non ancora disponibile",
+  passwordModalBody: "Il cambio password sarà attivo in una prossima versione.",
+  twoFactorTitle: "Autenticazione a due fattori",
+  twoFactorStatusLabel: "Stato",
+  twoFactorStatus: "Non configurata",
+  twoFactorButton: "Configura 2FA",
+  twoFactorModalTitle: "Autenticazione a due fattori non ancora disponibile",
+  twoFactorModalBody: "La configurazione del secondo fattore sarà attiva in una prossima versione.",
+  sessionsTitle: "Sessioni attive",
+  sessionsEmpty: "Nessuna sessione aggiuntiva disponibile.",
+};
+
+export const documentsPage = {
+  title: "Documentazione",
+  uploadTitle: "Carica documentazione",
+  uploadDescription: "Carica i documenti richiesti per le operazioni di pagamento.",
+  dropzone: "Trascina qui i tuoi documenti oppure seleziona un file.",
+  selectFile: "Seleziona file",
+  accepted: "Formati accettati: PNG, JPG, PDF. Dimensione massima 10 MB.",
+  statusReady: "Pronto per il caricamento",
+  remove: "Rimuovi",
+  removeLabel: "Rimuovi il file",
+  errorType: "Formato non supportato. Sono ammessi PNG, JPG e PDF.",
+  errorSize: "File troppo grande. Il limite è 10 MB.",
+  notUploaded: "I file restano nel browser: non vengono ancora inviati a nessun server.",
+  paymentsTitle: "Documenti relativi ai pagamenti",
+  paymentsEmpty: "Non sono ancora presenti documenti.",
+  paymentsColumns: ["ID pagamento", "Documento", "Data di caricamento", "Stato", "Verifica"],
+};
+
+/* ===========================================================================
  * TIPI E FUNZIONI DI SUPPORTO — non serve modificarli per cambiare i testi.
  * =========================================================================== */
+
+export interface DashboardNavItem {
+  label: string;
+  href: string;
+  icon: IconName;
+}
 
 export interface NavLink {
   label: string;
