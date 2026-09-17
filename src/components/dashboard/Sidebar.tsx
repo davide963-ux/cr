@@ -5,25 +5,33 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { Logo } from "@/components/layout/Logo";
-import { dashboardNav, dashboardShell } from "@/data/content";
+import { dashboardShell, type DashboardNavItem } from "@/data/content";
 import { cn } from "@/lib/cn";
 
 /**
  * Vince la corrispondenza più lunga: "/dashboard" è prefisso di ogni
  * sottopagina, quindi senza questo confronto resterebbe sempre acceso.
  */
-function activeHref(pathname: string): string | undefined {
-  return dashboardNav
+function activeHref(pathname: string, items: DashboardNavItem[]): string | undefined {
+  return items
     .map((item) => item.href)
     .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
     .sort((a, b) => b.length - a.length)[0];
 }
 
-function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const current = activeHref(pathname);
+function NavLinks({
+  pathname,
+  items,
+  onNavigate,
+}: {
+  pathname: string;
+  items: DashboardNavItem[];
+  onNavigate?: () => void;
+}) {
+  const current = activeHref(pathname, items);
   return (
     <ul className="space-y-1">
-      {dashboardNav.map((item) => {
+      {items.map((item) => {
         const active = item.href === current;
         return (
           <li key={item.href}>
@@ -65,7 +73,7 @@ function SignOut({ full = false }: { full?: boolean }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ items }: { items: DashboardNavItem[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -110,7 +118,7 @@ export function Sidebar() {
         className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto border-t border-line bg-ink px-5 py-6 lg:hidden"
       >
         <nav aria-label={dashboardShell.navLabel}>
-          <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+          <NavLinks pathname={pathname} items={items} onNavigate={() => setOpen(false)} />
         </nav>
         <div className="mt-6 border-t border-line pt-4">
           <SignOut full />
@@ -123,7 +131,7 @@ export function Sidebar() {
           <Logo />
         </div>
         <nav aria-label={dashboardShell.navLabel} className="mt-8 flex-1">
-          <NavLinks pathname={pathname} />
+          <NavLinks pathname={pathname} items={items} />
         </nav>
         <div className="border-t border-line pt-4">
           <SignOut full />

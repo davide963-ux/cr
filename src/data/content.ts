@@ -451,6 +451,61 @@ export const documentsPage = {
 };
 
 /* ===========================================================================
+ * 16. PANNELLO DI AMMINISTRAZIONE
+ * =========================================================================== */
+
+export const adminPage = {
+  navLabel: "Amministrazione",
+  title: "Amministrazione",
+  description: "Elenco dei conti e rettifiche di saldo. Ogni movimento resta nel registro.",
+  usersTitle: "Utenti",
+  usersEmpty: "Nessun utente registrato.",
+  ledgerTitle: "Ultimi movimenti",
+  ledgerEmpty: "Nessun movimento registrato.",
+  columns: {
+    user: "Utente",
+    contact: "Contatti",
+    balance: "Saldo",
+    role: "Ruolo",
+    actions: "Rettifica",
+    amount: "Importo",
+    reason: "Motivo",
+    date: "Data",
+    balanceAfter: "Saldo dopo",
+  },
+  roleAdmin: "Amministratore",
+  roleUser: "Utente",
+  promote: "Rendi amministratore",
+  demote: "Revoca amministratore",
+  credit: "Accredita",
+  debit: "Addebita",
+  amountLabel: "Importo in euro",
+  amountPlaceholder: "50,00",
+  reasonLabel: "Motivo",
+  reasonPlaceholder: "Deposito del 12/09 non accreditato",
+  submit: "Registra movimento",
+  pending: "Attendi…",
+  adjustDone: "Movimento registrato.",
+  roleDone: "Ruolo aggiornato.",
+  totalBalance: "Somma dei saldi",
+  totalUsers: "Utenti registrati",
+  migrationTitle: "Database non ancora predisposto",
+  migrationBody:
+    "Esegui supabase/migrations/0001_profiles_and_ledger.sql nell'SQL Editor di Supabase, poi assegna il primo amministratore.",
+  errors: {
+    notAuthorised: "Non hai i permessi per questa operazione.",
+    userNotFound: "Utente non trovato.",
+    invalidAmount: "Importo non valido. Usa la virgola per i decimali, ad esempio 1234,56.",
+    invalidInput: "Dati non validi.",
+    reasonRequired: "Indica il motivo del movimento.",
+    outOfRange: "Importo fuori scala.",
+    constraint: "Operazione rifiutata: il saldo non può diventare negativo.",
+    migrationMissing: "Il database non è ancora predisposto: esegui la migrazione SQL.",
+    generic: "Operazione non riuscita. Riprova.",
+  },
+};
+
+/* ===========================================================================
  * TIPI E FUNZIONI DI SUPPORTO — non serve modificarli per cambiare i testi.
  * =========================================================================== */
 
