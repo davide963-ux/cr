@@ -1,9 +1,9 @@
 /**
  * Registro degli asset mostrati in homepage.
- * `providerId` è l'identificativo usato dal provider di mercato
- * (da allineare quando verrà scelto il fornitore reale).
+ * I prezzi arrivano dai widget: qui stanno solo identità e simboli.
  */
 export interface AssetDefinition {
+  /** Identificativo interno, usato anche come chiave di React. */
   providerId: string;
   symbol: string;
   name: string;
@@ -26,8 +26,4 @@ export const assetRegistry: AssetDefinition[] = [
 
 export const FEATURED_ASSET = assetRegistry.find((a) => a.providerId === FEATURED_ASSET_ID)!;
 
-export const HOMEPAGE_ASSET_IDS = assetRegistry.map((a) => a.providerId);
 
-export function getAssetDefinition(providerId: string): AssetDefinition | undefined {
-  return assetRegistry.find((a) => a.providerId === providerId);
-}

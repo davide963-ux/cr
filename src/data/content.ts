@@ -31,7 +31,6 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   locale: "it-IT",
   ogLocale: "it_IT",
-  currency: "EUR",
   copyrightYear: 2026,
   /** true finché il sito mostra dati dimostrativi: abilita i badge "Dati dimostrativi". */
   demoMode: true,

@@ -46,20 +46,18 @@ flowchart TD
     PAGE --> MB
 
     subgraph Server["Solo server — import 'server-only'"]
-        SVC["marketDataService.getMarketSnapshot()"]
-        SVC --> CG["coingeckoProvider"]
-        SVC --> MOCK["mockProvider"]
-        SVC --> HTTP["httpProvider (template)"]
+        ACC["accountService → AccountUser"]
+        ADM["adminService → saldi e registro"]
         REV["reviewsService"]
         STA["statsService"]
     end
-    SVC --> API["GET /api/market<br/>(endpoint disponibile, non usato dalla homepage)"]
+    SB[("Supabase<br/>auth · profiles · ledger_entries")] --> ACC
+    SB --> ADM
 ```
 
-I prezzi della homepage non passano più dal server: nessuna chiave API, nessun rate
-limit, nessuna chiamata che possa fallire in produzione. Il layer
-`src/services/market/` resta disponibile dietro `/api/market` per chi volesse tornare a
-card disegnate in casa (vedi [Tornare alle card con dati propri](#tornare-alle-card-con-dati-propri)).
+Nessun prezzo passa dal server: niente chiavi API, niente rate limit, nessuna
+chiamata che possa fallire in produzione. Lato server restano solo i dati del
+conto, che arrivano da Supabase.
 
 ### Prezzi crypto in tempo reale
 
@@ -98,26 +96,12 @@ sequenceDiagram
 Cambiare widget o config = sostituire l'oggetto `config` passato a `TradingViewWidget`
 con quello generato dal [widget builder di TradingView](https://www.tradingview.com/widget/).
 
-### Tornare alle card con dati propri
-
-Il layer `src/services/market/` (provider CoinGecko / mock / HTTP, tipi, endpoint
-`/api/market`) è intatto e funzionante: serve se un giorno si vuole tornare a card
-disegnate in casa, con capitalizzazione e volumi che i widget non espongono. In quel
-caso i componenti presentazionali originali (`Sparkline`, `PriceChart`, `ChangeBadge`,
-`MarketState`) sono ancora nel repo, e le variabili `MARKET_DATA_*` / `COINGECKO_API_KEY`
-tornano rilevanti. Attenzione: sul piano gratuito senza chiave, CoinGecko rifiuta spesso
-le richieste dagli IP dei datacenter (Vercel incluso) — con quel percorso serve una
-chiave API.
-
 ### Rendering della pagina
 
 ```mermaid
 sequenceDiagram
+    participant N as Next (build)
     participant B as Browser
-    participant N as Next (build / ISR)
-    participant S as marketDataService
-    N->>S: getMarketSnapshot()
-    S-->>N: { featured, assets, isDemo }
     N->>B: HTML statico (cornice delle card, nessun prezzo dal server)
     B->>B: Idratazione delle sole parti client:<br/>Navbar, Reveal, AnimatedCounter, TradingViewWidget
     B->>B: IntersectionObserver → animazione contatori<br/>(textContent via rAF, nessun re-render)
@@ -265,7 +249,6 @@ Il resto sono elenchi di dati, tenuti separati:
 | Asset in homepage, simboli TradingView (`tvSymbol`) | `src/data/assets.ts` |
 | Config dei widget di quotazione | `BitcoinCard.tsx`, `CryptoMarketGrid.tsx` |
 | Componente di embed TradingView | `src/components/ui/TradingViewWidget.tsx` |
-| Quotazioni demo (solo per `/api/market` con `MARKET_DATA_PROVIDER=mock`) | `src/data/market.mock.ts` |
 | Blockchain (il diagramma si adatta da solo) | `src/data/chains.ts` |
 | Statistiche (`isDemo`, `source`) | `src/data/stats.mock.ts` |
 | Recensioni | `src/data/reviews.mock.ts` → `src/services/content/reviewsService.ts` |
