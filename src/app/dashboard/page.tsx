@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { authFormLabels, dashboardContent } from "@/data/content";
+import { formatPrice } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -25,12 +26,15 @@ export default async function DashboardPage() {
   const meta = user.user_metadata ?? {};
   const name = typeof meta.full_name === "string" ? meta.full_name : (user.email ?? "");
 
+  const amount = typeof meta.amount === "number" ? formatPrice(meta.amount) : undefined;
+
   const details = [
     { label: authFormLabels.firstName, value: meta.first_name },
     { label: authFormLabels.lastName, value: meta.last_name },
     { label: authFormLabels.email, value: user.email },
     { label: authFormLabels.phone, value: meta.phone },
     { label: authFormLabels.city, value: meta.city },
+    { label: authFormLabels.amount, value: amount },
   ].filter((d): d is { label: string; value: string } => typeof d.value === "string" && d.value.length > 0);
 
   return (

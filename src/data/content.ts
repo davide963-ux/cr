@@ -297,6 +297,9 @@ export const authFormLabels = {
   phone: "Telefono",
   phonePlaceholder: "+39 333 1234567",
   city: "Città",
+  amount: "La somma",
+  amountPlaceholder: "1000",
+  amountHint: "Importo indicativo in USD. Nessun pagamento viene richiesto ora.",
   password: "Password",
   pending: "Attendi…",
 };
@@ -309,6 +312,7 @@ export const authErrors = {
   weakPassword: "La password deve avere almeno 8 caratteri.",
   missingProfileFields: "Compila nome, cognome, telefono e città.",
   invalidPhone: "Inserisci un numero di telefono valido.",
+  invalidAmount: "Inserisci una somma valida.",
   /** Volutamente generico: non rivela quali email siano già registrate. */
   badCredentials: "Email o password non corretti.",
   signUpFailed: "Registrazione non riuscita. Controlla i dati e riprova.",

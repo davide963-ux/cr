@@ -156,7 +156,7 @@ sequenceDiagram
 - **Errore unico per le credenziali sbagliate** ("Email o password non corretti"):
   un messaggio diverso per "utente inesistente" direbbe a chiunque quali indirizzi
   sono registrati.
-- **Dati raccolti alla registrazione** (nome, cognome, telefono, città) finiscono
+- **Dati raccolti alla registrazione** (nome, cognome, telefono, città, somma indicativa) finiscono
   in `user_metadata` sull'utente Supabase: nessuna tabella da creare, si vedono
   in Authentication → Users e l'area riservata li rilegge da lì.
   ⚠️ `user_metadata` è modificabile dall'utente stesso via API: va bene per

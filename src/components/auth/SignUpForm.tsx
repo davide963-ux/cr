@@ -40,6 +40,18 @@ export function SignUpForm() {
       </div>
 
       <Field
+        name="amount"
+        label={authFormLabels.amount}
+        type="number"
+        required
+        min={0}
+        step="0.01"
+        inputMode="decimal"
+        placeholder={authFormLabels.amountPlaceholder}
+        hint={authFormLabels.amountHint}
+      />
+
+      <Field
         name="password"
         label={authFormLabels.password}
         type="password"

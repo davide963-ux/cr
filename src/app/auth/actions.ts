@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { authErrors } from "@/data/content";
-import { sanitizeText } from "@/lib/sanitize";
+import { sanitizeText, toFiniteOrNull } from "@/lib/sanitize";
 import { AFTER_LOGIN_PATH, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -13,6 +13,8 @@ export interface AuthFormState {
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_TEXT_LENGTH = 80;
+/** Limite di sanità: la somma è indicativa, non un pagamento. */
+const MAX_AMOUNT = 1_000_000_000;
 
 function readCredentials(formData: FormData): { email: string; password: string } | null {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -73,6 +75,13 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
   if (!firstName || !lastName || !city || !phone) return { error: authErrors.missingProfileFields };
   if (!isValidPhone(phone)) return { error: authErrors.invalidPhone };
 
+  // Accetta sia "1000,50" che "1000.50": la virgola è il separatore decimale
+  // italiano. Il campo vuoto va respinto a parte: Number("") vale 0, quindi
+  // senza questo controllo una somma mancante passerebbe come zero.
+  const rawAmount = String(formData.get("amount") ?? "").trim().replace(",", ".");
+  const amount = rawAmount === "" ? null : toFiniteOrNull(rawAmount);
+  if (amount === null || amount < 0 || amount > MAX_AMOUNT) return { error: authErrors.invalidAmount };
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     ...credentials,
@@ -86,6 +95,7 @@ export async function signUpAction(_prev: AuthFormState, formData: FormData): Pr
         full_name: `${firstName} ${lastName}`,
         phone,
         city,
+        amount,
       },
     },
   });
