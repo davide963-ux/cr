@@ -54,6 +54,16 @@ export function formatAmount(value: number, currencyCode: string): string {
   return fmt.format(value);
 }
 
+const btcFormatter = new Intl.NumberFormat(locale, {
+  minimumFractionDigits: 8,
+  maximumFractionDigits: 8,
+});
+
+/** Importo in bitcoin, es. 0,00209384 BTC. Otto decimali: un satoshi. */
+export function formatBtc(value: number): string {
+  return `${btcFormatter.format(value)} BTC`;
+}
+
 const compactCurrency = new Intl.NumberFormat(locale, {
   style: "currency",
   currency,

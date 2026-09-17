@@ -16,12 +16,12 @@ export interface AssetDefinition {
 export const FEATURED_ASSET_ID = "bitcoin";
 
 export const assetRegistry: AssetDefinition[] = [
-  { providerId: "bitcoin", symbol: "BTC", name: "Bitcoin", tint: "#E9A24B", tvSymbol: "BINANCE:BTCUSDT" },
-  { providerId: "ethereum", symbol: "ETH", name: "Ethereum", tint: "#9AA8E8", tvSymbol: "BINANCE:ETHUSDT" },
-  { providerId: "solana", symbol: "SOL", name: "Solana", tint: "#B58CF0", tvSymbol: "BINANCE:SOLUSDT" },
-  { providerId: "binancecoin", symbol: "BNB", name: "BNB", tint: "#E8C24A", tvSymbol: "BINANCE:BNBUSDT" },
-  { providerId: "ripple", symbol: "XRP", name: "XRP", tint: "#B9C4C9", tvSymbol: "BINANCE:XRPUSDT" },
-  { providerId: "cardano", symbol: "ADA", name: "Cardano", tint: "#6FA3E8", tvSymbol: "BINANCE:ADAUSDT" },
+  { providerId: "bitcoin", symbol: "BTC", name: "Bitcoin", tint: "#E9A24B", tvSymbol: "BINANCE:BTCEUR" },
+  { providerId: "ethereum", symbol: "ETH", name: "Ethereum", tint: "#9AA8E8", tvSymbol: "BINANCE:ETHEUR" },
+  { providerId: "solana", symbol: "SOL", name: "Solana", tint: "#B58CF0", tvSymbol: "BINANCE:SOLEUR" },
+  { providerId: "binancecoin", symbol: "BNB", name: "BNB", tint: "#E8C24A", tvSymbol: "BINANCE:BNBEUR" },
+  { providerId: "ripple", symbol: "XRP", name: "XRP", tint: "#B9C4C9", tvSymbol: "BINANCE:XRPEUR" },
+  { providerId: "cardano", symbol: "ADA", name: "Cardano", tint: "#6FA3E8", tvSymbol: "BINANCE:ADAEUR" },
 ];
 
 export const FEATURED_ASSET = assetRegistry.find((a) => a.providerId === FEATURED_ASSET_ID)!;

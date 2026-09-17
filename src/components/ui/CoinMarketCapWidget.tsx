@@ -23,7 +23,7 @@ interface CoinMarketCapWidgetProps {
  * nodi gestiti da React (necessario con reactStrictMode, che in sviluppo monta
  * gli effetti due volte).
  */
-export function CoinMarketCapWidget({ currencyId, base = "USD", className }: CoinMarketCapWidgetProps) {
+export function CoinMarketCapWidget({ currencyId, base = "EUR", className }: CoinMarketCapWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

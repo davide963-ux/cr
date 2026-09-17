@@ -194,6 +194,12 @@ flowchart LR
 - **Una sola fonte dei dati**: `src/services/account/accountService.ts` traduce
   l'utente Supabase in `AccountUser`. Username e saldo non sono mai riscritti a
   mano in una pagina: quando arriverà un backend di pagamenti cambia solo quel file.
+- **Valuta unica: EUR**, dal conto ai widget della homepage (`siteConfig.currency`,
+  coppie `BINANCE:*EUR`, widget CoinMarketCap su base EUR).
+- **Controvalore in bitcoin** sotto al saldo: il cambio EUR/BTC si chiede dal
+  browser del visitatore, non dal server, perché CoinGecko rifiuta spesso gli IP
+  dei datacenter. Se il cambio non arriva la conversione non viene mostrata:
+  su un saldo un numero sbagliato è peggio di un numero assente.
 - **Saldo 0, wallet null, nessun movimento**: non esiste ancora un sistema di
   pagamenti, quindi le pagine mostrano stati vuoti dichiarati invece di numeri o
   indirizzi inventati. Su una piattaforma finanziaria un dato finto è peggio di
