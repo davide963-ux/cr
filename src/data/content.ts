@@ -394,7 +394,18 @@ export const dashboardHome = {
 
   // Prezzo bitcoin
   btcPanelTitle: "Prezzo Bitcoin",
-  btcPanelSubtitle: "Dati di mercato in tempo reale",
+  btcPanelSubtitle: "Dati di mercato in tempo reale e analisi",
+  btcPanelCredit: "Dati da CoinGecko",
+  btcPanelLoading: "Caricamento dei dati di mercato…",
+  btcPanelUnavailable: "Dati di mercato non disponibili al momento.",
+  btcCurrentPrice: "Prezzo corrente",
+  btcChange: "Variazione 24h",
+  btcMarketCap: "Capitalizzazione di mercato",
+  btcHigh: "Massimo 24h",
+  btcLow: "Minimo 24h",
+  btcVolume: "Volume 24h",
+  btcDominance: "Dominanza",
+  btcChartLabel: "Andamento del prezzo del bitcoin nelle ultime 24 ore",
 
   // Conti in valuta
   fiatTitle: "Account Fiat",
