@@ -5,7 +5,7 @@ import { adminPage } from "@/data/content";
 import { parseAmountToCents } from "@/lib/money";
 import { sanitizeText } from "@/lib/sanitize";
 import { getAccount } from "@/services/account/accountService";
-import { adjustBalance, setAdmin } from "@/services/admin/adminService";
+import { adjustBalance, decideWithdrawal, setAdmin } from "@/services/admin/adminService";
 
 export interface AdminFormState {
   error?: string;
@@ -19,6 +19,8 @@ function messageForCode(code: string): string {
       return adminPage.errors.notAuthorised;
     case "23514":
       return adminPage.errors.constraint;
+    case "55000":
+      return adminPage.errors.alreadyDecided;
     case "P0002":
       return adminPage.errors.userNotFound;
     case "22003":
@@ -74,4 +76,38 @@ export async function setAdminAction(_prev: AdminFormState, formData: FormData):
 
   revalidatePath("/dashboard/admin");
   return { success: adminPage.roleDone };
+}
+
+/**
+ * Approva o rifiuta una richiesta di prelievo.
+ *
+ * Approvare non muove il saldo: l'importo è stato trattenuto al momento della
+ * richiesta. Rifiutare lo restituisce, e il motivo scritto qui è ciò che
+ * l'utente legge nella propria pagina — per questo è obbligatorio.
+ */
+export async function decideWithdrawalAction(
+  _prev: AdminFormState,
+  formData: FormData,
+): Promise<AdminFormState> {
+  // Prima barriera. Quella che conta è dentro `admin_decide_withdrawal`.
+  const account = await getAccount();
+  if (!account?.isAdmin) return { error: adminPage.errors.notAuthorised };
+
+  const id = String(formData.get("withdrawal_id") ?? "");
+  const kind = String(formData.get("decision_kind") ?? "");
+  const decision = sanitizeText(formData.get("decision"), 500);
+
+  if (!id) return { error: adminPage.errors.userNotFound };
+  if (kind !== "approve" && kind !== "reject") return { error: adminPage.errors.invalidInput };
+
+  const approve = kind === "approve";
+  if (!approve && !decision) return { error: adminPage.errors.decisionRequired };
+
+  const result = await decideWithdrawal(id, approve, decision || null);
+  if (!result.ok) return { error: messageForCode(result.code) };
+
+  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/prelievi");
+  revalidatePath("/dashboard");
+  return { success: approve ? adminPage.approveDone : adminPage.rejectDone };
 }

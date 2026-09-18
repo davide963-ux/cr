@@ -1,7 +1,8 @@
 import "server-only";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { centsToUnits } from "@/services/account/accountService";
-import type { AdminUserRow, LedgerEntry } from "@/services/account/types";
+import type { AdminUserRow, AdminWithdrawal, LedgerEntry } from "@/services/account/types";
+import { toWithdrawal, WITHDRAWAL_COLUMNS } from "@/services/account/withdrawalService";
 
 /**
  * Elenco completo degli utenti.
@@ -90,4 +91,63 @@ export async function setAdmin(
 
   if (error) return { ok: false, code: error.code ?? "unknown" };
   return { ok: true };
+}
+
+/**
+ * Tutte le richieste di prelievo, con l'utente accanto.
+ *
+ * L'utente arriva da una join su `profiles`: senza, il pannello mostrerebbe
+ * un UUID. Le policy RLS restituiscono l'elenco completo solo a chi è
+ * amministratore; a chiunque altro, soltanto le proprie righe.
+ */
+export async function listWithdrawals(limit = 100): Promise<AdminWithdrawal[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("withdrawals")
+    .select(`${WITHDRAWAL_COLUMNS}, profiles!withdrawals_user_id_fkey (email, first_name, last_name)`)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    // La join arriva come oggetto o come array di uno, a seconda di come
+    // PostgREST deduce la cardinalità: normalizzata qui una volta sola.
+    const joined = row.profiles as
+      | { email: string | null; first_name: string | null; last_name: string | null }
+      | { email: string | null; first_name: string | null; last_name: string | null }[]
+      | null;
+    const profile = Array.isArray(joined) ? joined[0] : joined;
+    const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ");
+
+    return {
+      ...toWithdrawal(row),
+      userId: row.user_id,
+      userEmail: profile?.email ?? "",
+      userName: fullName || null,
+      decidedBy: row.decided_by ?? null,
+    };
+  });
+}
+
+/**
+ * Approva o rifiuta. Il saldo lo muove la funzione SQL, che blocca la riga
+ * prima di leggerne lo stato: due amministratori sulla stessa richiesta si
+ * mettono in fila, e il secondo riceve "già evasa" invece di sovrascrivere
+ * la decisione del primo.
+ */
+export async function decideWithdrawal(
+  id: string,
+  approve: boolean,
+  decision: string | null,
+): Promise<{ ok: true; status: string } | { ok: false; code: string }> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("admin_decide_withdrawal", {
+    withdrawal_id: id,
+    approve,
+    decision,
+  });
+
+  if (error) return { ok: false, code: error.code ?? "unknown" };
+  return { ok: true, status: typeof data === "string" ? data : "" };
 }
