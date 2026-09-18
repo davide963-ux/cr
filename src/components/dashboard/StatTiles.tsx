@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/icons/Icon";
 import { dashboardHome } from "@/data/content";
 import { cn } from "@/lib/cn";
-import { formatAmount } from "@/lib/format";
+import { formatAmount, formatPercent } from "@/lib/format";
 import { satsToCurrency } from "@/lib/money";
 import { Money, Btc } from "./Money";
 import { useRates } from "./RatesProvider";
@@ -47,7 +47,7 @@ function Change({ amount, percent, currency }: { amount: number; percent: number
     <span className={cn("tabular inline-flex items-center gap-1", positive ? "text-mint" : "text-loss")}>
       {positive ? "↑" : "↓"} {positive ? "+" : ""}
       {formatAmount(amount, currency)}
-      {percent === null ? null : ` (${positive ? "+" : ""}${percent.toFixed(1)}%)`}
+      {percent === null ? null : ` (${positive ? "+" : ""}${formatPercent(percent, 1)})`}
     </span>
   );
 }
