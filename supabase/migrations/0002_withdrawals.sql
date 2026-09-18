@@ -20,6 +20,51 @@
 -- movimento di segno opposto: il registro conserva entrambi i passaggi.
 -- ============================================================================
 
+
+do $$
+begin
+  if not (to_regclass('public.profiles') is not null) then
+    raise exception 'Manca un passaggio precedente: esegui prima 0001_profiles_and_ledger.sql. Esegui STATO.sql per l''elenco completo, in ordine.'
+      using errcode = '55000';
+  end if;
+end
+$$;
+
+-- ─────────────── Protezione ───────────────
+/*
+ * Rieseguire una migrazione dopo che una successiva è già passata non è un
+ * ritocco innocuo: ricrea la versione vecchia delle funzioni accanto a quella
+ * nuova. PostgREST si trova due firme con lo stesso nome, non sa quale
+ * chiamare, e l'applicazione smette di funzionare con PGRST203 — senza che
+ * nulla, qui, sia sembrato andare storto.
+ *
+ * Meglio fermarsi con un messaggio che dice cosa fare.
+ */
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'profiles' and column_name = 'balance_sats'
+  ) then
+    raise exception 'Questo file è già superato: la 0004 è stata eseguita. Non rieseguire le migrazioni precedenti. Esegui STATO.sql per vedere cosa manca davvero.'
+      using errcode = '55000';
+  end if;
+end
+$$;
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'withdrawals'
+       and column_name = 'destination' and is_nullable = 'YES'
+  ) then
+    raise exception 'Questo file è già superato: la 0003 è stata eseguita. Non rieseguire le migrazioni precedenti. Esegui STATO.sql per vedere cosa manca davvero.'
+      using errcode = '55000';
+  end if;
+end
+$$;
+
 -- ─────────────────────────── Stato ───────────────────────────
 
 -- `create type` non ammette "if not exists": serve il giro dal catalogo.
