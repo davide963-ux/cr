@@ -69,6 +69,11 @@ alter table public.withdrawals
 alter table public.withdrawals
   drop constraint if exists withdrawals_amount_cents_check;
 
+-- Anche il nuovo va tolto prima di rimetterlo: senza, una seconda esecuzione
+-- si ferma qui con "constraint already exists" e lascia il resto a metà.
+alter table public.withdrawals
+  drop constraint if exists withdrawals_amount_sats_check;
+
 alter table public.withdrawals
   add constraint withdrawals_amount_sats_check check (amount_sats > 0);
 
