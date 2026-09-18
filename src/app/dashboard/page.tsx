@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     : [[], null];
 
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <TopBar username={account.username} email={account.email} />
 
       {account.profileReady ? null : (

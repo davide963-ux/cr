@@ -41,13 +41,18 @@ function NavLinks({
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-[var(--radius-control)] border px-3 py-2.5 text-[0.9375rem] transition-colors duration-200",
+                "group relative flex items-center gap-3 overflow-hidden rounded-[var(--radius-control)] border px-3 py-2.5 text-[0.9375rem] transition-[color,background-color,border-color,box-shadow] duration-300 ease-[var(--ease-ui)]",
                 active
-                  ? "border-mint/25 bg-mint/[0.08] font-medium text-mint"
-                  : "border-transparent text-mist hover:bg-panel-raised hover:text-paper",
+                  ? // La barretta a sinistra è un'ombra interna: segue il raggio dell'angolo
+                    "border-mint/25 bg-mint/[0.08] font-medium text-mint shadow-[inset_3px_0_0_0_var(--color-mint),0_0_22px_-10px_rgb(103_227_174/0.8)]"
+                  : "border-transparent text-mist hover:border-line hover:bg-panel-raised hover:text-paper",
               )}
             >
-              <Icon name={item.icon} size={18} className="shrink-0" />
+              <Icon
+                name={item.icon}
+                size={18}
+                className="shrink-0 transition-transform duration-300 ease-[var(--ease-ui)] group-hover:scale-110"
+              />
               {item.label}
             </Link>
           </li>
@@ -149,7 +154,7 @@ export function Sidebar({
         <div className="border-t border-line pt-4">
           <SignOut full />
           <p className="mt-3 flex items-center gap-2 px-3 text-xs text-mist">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-mint" />
+            <span aria-hidden="true" className="motion-safe:animate-halo size-1.5 rounded-full bg-mint" />
             {dashboardHome.statusOnline}
           </p>
         </div>

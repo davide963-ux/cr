@@ -58,9 +58,9 @@ export function QuickActions() {
             key={action.id}
             type="button"
             onClick={() => setOpen(action)}
-            className="panel group flex items-center gap-4 p-5 text-left transition-colors duration-200 hover:border-line-strong hover:bg-panel-raised"
+            className="panel group flex items-center gap-4 p-5 text-left"
           >
-            <span className="grid size-11 shrink-0 place-items-center rounded-[var(--radius-card)] bg-mint/10 text-mint">
+            <span className="icon-tile grid size-11 shrink-0 place-items-center rounded-[var(--radius-card)] transition-transform duration-300 ease-[var(--ease-ui)] group-hover:scale-105">
               <Icon name={action.icon} size={19} />
             </span>
             <span className="min-w-0 flex-1">
@@ -80,7 +80,7 @@ export function QuickActions() {
             <Icon
               name="chevron"
               size={16}
-              className="shrink-0 text-mist transition-transform duration-200 group-hover:translate-x-0.5"
+              className="shrink-0 text-mist transition-[transform,color] duration-300 ease-[var(--ease-ui)] group-hover:translate-x-1 group-hover:text-mint"
             />
           </button>
         ))}

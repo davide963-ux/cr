@@ -6,6 +6,7 @@ import { dashboardHome } from "@/data/content";
 import { cn } from "@/lib/cn";
 import { formatAmount, formatBtc } from "@/lib/format";
 import { useRates } from "./RatesProvider";
+import { Shimmer } from "./Shimmer";
 
 interface TileProps {
   icon: IconName;
@@ -17,12 +18,12 @@ interface TileProps {
 
 function Tile({ icon, label, value, footer, tint = "neutral" }: TileProps) {
   return (
-    <div className="panel p-5 transition-colors duration-200 hover:border-line-strong">
+    <div className="panel group p-5">
       <div className="flex items-start gap-3.5">
         <span
           className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-[var(--radius-card)]",
-            tint === "mint" ? "bg-mint/10 text-mint" : "bg-panel-raised text-mist",
+            "grid size-10 shrink-0 place-items-center rounded-[var(--radius-card)] transition-transform duration-300 ease-[var(--ease-ui)] group-hover:scale-105",
+            tint === "mint" ? "icon-tile" : "bg-panel-raised text-mist ring-1 ring-line",
           )}
         >
           <Icon name={icon} size={18} />
@@ -62,6 +63,8 @@ export function StatTiles({ balance, currency, walletCount, weekly }: StatTilesP
   const btcValue =
     rates.status === "ready" ? (
       formatBtc(balance / rates.rates.eur)
+    ) : rates.status === "loading" ? (
+      <Shimmer label={dashboardHome.ratesLoading} className="h-7 w-40 align-middle" />
     ) : (
       <span className="text-mist">—</span>
     );
@@ -79,7 +82,7 @@ export function StatTiles({ balance, currency, walletCount, weekly }: StatTilesP
         icon="wallet"
         tint="mint"
         label={dashboardHome.balanceLabel}
-        value={formatAmount(balance, currency)}
+        value={<span className="glow-mint">{formatAmount(balance, currency)}</span>}
         footer={dashboardHome.balanceTileFooter}
       />
       <Tile

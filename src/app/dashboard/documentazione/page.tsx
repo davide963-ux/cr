@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Documentazione" };
 
 export default function DocumentsPage() {
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <DashboardHeader title={documentsPage.title} />
 
       <Card title={documentsPage.uploadTitle}>

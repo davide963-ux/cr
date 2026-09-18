@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Sicurezza" };
 
 export default function SecurityPage() {
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <DashboardHeader title={securityPage.title} />
 
       <Card

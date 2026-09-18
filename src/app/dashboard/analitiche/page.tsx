@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Analitiche" };
  */
 export default function AnalyticsPage() {
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <DashboardHeader title={analyticsPage.title} />
       <p className="max-w-xl text-mist">{analyticsPage.description}</p>
 

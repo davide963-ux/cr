@@ -16,7 +16,7 @@ export default async function ProfilePage() {
   const { fields } = profilePage;
 
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <DashboardHeader
         title={profilePage.title}
         action={

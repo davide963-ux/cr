@@ -29,7 +29,7 @@ export default async function AdminPage() {
   const emailById = new Map(users.map((u) => [u.id, u.email]));
 
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <DashboardHeader title={adminPage.title} />
       <p className="max-w-2xl text-mist">{adminPage.description}</p>
 

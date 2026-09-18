@@ -7,6 +7,7 @@ import { dashboardHome } from "@/data/content";
 import { buildChartGeometry, CHART_VIEWBOX } from "@/lib/chart";
 import { cn } from "@/lib/cn";
 import { formatAmount, formatCompact, formatPercent } from "@/lib/format";
+import { Shimmer } from "./Shimmer";
 
 interface Market {
   price: number;
@@ -167,7 +168,7 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
     <section className="panel overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-5">
         <div className="flex items-center gap-3.5">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-card)] bg-mint/10 text-mint">
+          <span className="icon-tile grid size-10 shrink-0 place-items-center rounded-[var(--radius-card)]">
             <Icon name="chart" size={19} />
           </span>
           <div>
@@ -261,13 +262,19 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
                       strokeLinejoin="round"
                       strokeLinecap="round"
                       vectorEffect="non-scaling-stroke"
+                      // Alone del colore della linea: la stacca dal fondo scuro
+                      style={{ filter: `drop-shadow(0 0 5px ${tint}80)` }}
                     />
                   </svg>
                 </>
               ) : (
-                <p className="grid h-full place-items-center text-sm text-mist">
-                  {state.status === "loading" ? dashboardHome.btcPanelLoading : dashboardHome.btcPanelUnavailable}
-                </p>
+                <div className="grid h-full place-items-center p-6">
+                  {state.status === "loading" ? (
+                    <Shimmer label={dashboardHome.btcPanelLoading} className="h-full w-full rounded-[var(--radius-card)]" />
+                  ) : (
+                    <p className="text-sm text-mist">{dashboardHome.btcPanelUnavailable}</p>
+                  )}
+                </div>
               )}
             </div>
 
@@ -291,7 +298,7 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
                   value: market?.dominance != null ? formatPercent(market.dominance, 1) : "—",
                 },
               ].map((item) => (
-                <div key={item.label} className="bg-panel p-4">
+                <div key={item.label} data-row="" className="bg-panel p-4">
                   <dt className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-mist">
                     {item.label}
                   </dt>
