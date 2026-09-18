@@ -33,9 +33,11 @@ export default async function AdminPage() {
   const totalBalance = users.reduce((sum, u) => sum + u.balance, 0);
   const emailById = new Map(users.map((u) => [u.id, u.email]));
 
-  // La coda da evadere e lo storico: due elenchi, non uno filtrato a vista.
-  const queue = withdrawals.filter((w) => w.status === "pending");
-  const settled = withdrawals.filter((w) => w.status !== "pending");
+  // null = tabella assente, diverso da [] ("nessuna richiesta"): il pannello
+  // deve dire che manca la migrazione, non che la coda è vuota.
+  const withdrawalsReady = withdrawals !== null;
+  const queue = (withdrawals ?? []).filter((w) => w.status === "pending");
+  const settled = (withdrawals ?? []).filter((w) => w.status !== "pending");
 
   return (
     <div className="dash-stack space-y-8">
@@ -63,7 +65,9 @@ export default async function AdminPage() {
 
       {/* La coda sta in alto: è l'unica parte del pannello che aspetta qualcuno. */}
       <Card title={adminPage.withdrawalsPendingTitle}>
-        {queue.length === 0 ? (
+        {!withdrawalsReady ? (
+          <EmptyState message={adminPage.withdrawalsMigrationMissing} icon="alert" />
+        ) : queue.length === 0 ? (
           <EmptyState message={adminPage.withdrawalsPendingEmpty} icon="upload" />
         ) : (
           <ul className="space-y-4">

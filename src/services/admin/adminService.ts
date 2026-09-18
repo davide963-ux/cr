@@ -1,4 +1,5 @@
 import "server-only";
+import { logRpcError } from "@/lib/supabase/rpcError";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { centsToUnits } from "@/services/account/accountService";
 import type { AdminUserRow, AdminWithdrawal, LedgerEntry } from "@/services/account/types";
@@ -74,7 +75,7 @@ export async function adjustBalance(
     adjust_reason: reason,
   });
 
-  if (error) return { ok: false, code: error.code ?? "unknown" };
+  if (error) return { ok: false, code: logRpcError("admin_adjust_balance", error) };
   return { ok: true, balance: centsToUnits(typeof data === "number" ? data : 0) };
 }
 
@@ -89,7 +90,7 @@ export async function setAdmin(
     make_admin: makeAdmin,
   });
 
-  if (error) return { ok: false, code: error.code ?? "unknown" };
+  if (error) return { ok: false, code: logRpcError("admin_set_admin", error) };
   return { ok: true };
 }
 
@@ -100,7 +101,7 @@ export async function setAdmin(
  * un UUID. Le policy RLS restituiscono l'elenco completo solo a chi è
  * amministratore; a chiunque altro, soltanto le proprie righe.
  */
-export async function listWithdrawals(limit = 100): Promise<AdminWithdrawal[]> {
+export async function listWithdrawals(limit = 100): Promise<AdminWithdrawal[] | null> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("withdrawals")
@@ -108,9 +109,13 @@ export async function listWithdrawals(limit = 100): Promise<AdminWithdrawal[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error || !data) return [];
+  // null, non []: una tabella mancante non è "nessuna richiesta di prelievo".
+  if (error) {
+    logRpcError("select withdrawals (admin)", error);
+    return null;
+  }
 
-  return data.map((row) => {
+  return (data ?? []).map((row) => {
     // La join arriva come oggetto o come array di uno, a seconda di come
     // PostgREST deduce la cardinalità: normalizzata qui una volta sola.
     const joined = row.profiles as
@@ -148,6 +153,6 @@ export async function decideWithdrawal(
     decision,
   });
 
-  if (error) return { ok: false, code: error.code ?? "unknown" };
+  if (error) return { ok: false, code: logRpcError("admin_decide_withdrawal", error) };
   return { ok: true, status: typeof data === "string" ? data : "" };
 }

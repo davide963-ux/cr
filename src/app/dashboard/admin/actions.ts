@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { adminPage } from "@/data/content";
 import { parseAmountToCents } from "@/lib/money";
 import { sanitizeText } from "@/lib/sanitize";
+import { isSchemaMissing } from "@/lib/supabase/rpcError";
 import { getAccount } from "@/services/account/accountService";
 import { adjustBalance, decideWithdrawal, setAdmin } from "@/services/admin/adminService";
 
@@ -14,6 +15,10 @@ export interface AdminFormState {
 
 /** Messaggio leggibile per ogni errore sollevato dalla funzione SQL. */
 function messageForCode(code: string): string {
+  // PostgREST risponde con i propri codici quando la funzione non è nella sua
+  // cache dello schema: i codici SQL da soli non li intercettano.
+  if (isSchemaMissing(code)) return adminPage.errors.migrationMissing;
+
   switch (code) {
     case "42501":
       return adminPage.errors.notAuthorised;
@@ -27,11 +32,8 @@ function messageForCode(code: string): string {
       return adminPage.errors.outOfRange;
     case "22023":
       return adminPage.errors.invalidInput;
-    case "42883":
-    case "42P01":
-      return adminPage.errors.migrationMissing;
     default:
-      return adminPage.errors.generic;
+      return `${adminPage.errors.generic} Codice: ${code}`;
   }
 }
 

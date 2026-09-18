@@ -581,9 +581,15 @@ export const withdrawPage = {
     notFound: "Richiesta non trovata.",
     alreadyDecided: "Questa richiesta è già stata evasa.",
     migrationMissing:
-      "Il database non è ancora predisposto: esegui supabase/migrations/0002_withdrawals.sql.",
+      "Il database non è ancora predisposto per i prelievi: esegui supabase/migrations/0002_withdrawals.sql e 0003_optional_destination.sql nell'SQL Editor di Supabase. Se le hai appena eseguite, attendi qualche secondo: Supabase deve ricaricare lo schema.",
     generic: "Operazione non riuscita. Riprova.",
+    /** Il codice serve a capire cosa è successo senza indovinare. */
+    genericWithCode: "Operazione non riuscita. Riprova. Codice: {code}",
   },
+
+  migrationTitle: "Prelievi non ancora attivi",
+  migrationBody:
+    "La tabella dei prelievi non esiste ancora. Esegui supabase/migrations/0002_withdrawals.sql e poi 0003_optional_destination.sql nell'SQL Editor di Supabase: finché non lo fai, le richieste non possono essere registrate.",
 };
 
 /* ===========================================================================
@@ -631,6 +637,8 @@ export const adminPage = {
   withdrawalsPendingTitle: "Da evadere",
   withdrawalsHistoryTitle: "Richieste già evase",
   withdrawalsEmpty: "Nessuna richiesta di prelievo.",
+  withdrawalsMigrationMissing:
+    "La tabella dei prelievi non esiste ancora: esegui supabase/migrations/0002_withdrawals.sql e 0003_optional_destination.sql.",
   withdrawalsPendingEmpty: "Nessuna richiesta in attesa. Tutto evaso.",
   withdrawalDestination: "Destinazione",
   withdrawalDestinationMissing: "Nessuna destinazione indicata: contatta l'utente per concordarla prima di approvare.",

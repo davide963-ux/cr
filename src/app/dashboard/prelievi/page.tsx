@@ -17,8 +17,12 @@ export default async function WithdrawalsPage() {
   const account = await getAccount();
   if (!account) notFound();
 
+  // null = la tabella non c'è. Diverso da [] ("nessuna richiesta"): il primo
+  // è un problema di installazione da dire subito, il secondo è normale.
   const withdrawals = account.profileReady ? await listOwnWithdrawals() : [];
-  const held = heldTotal(withdrawals);
+  const ready = withdrawals !== null;
+  const entries = withdrawals ?? [];
+  const held = heldTotal(entries);
 
   return (
     <div className="dash-stack space-y-8">
@@ -29,6 +33,16 @@ export default async function WithdrawalsPage() {
         <p role="status" className="rounded-[var(--radius-card)] border border-line bg-panel-raised p-4 text-sm text-mist">
           {adminPage.migrationBody}
         </p>
+      )}
+
+      {ready ? null : (
+        <div
+          role="status"
+          className="rounded-[var(--radius-card)] border border-[#E9A24B]/30 bg-[#E9A24B]/[0.08] p-4 text-sm text-[#E9A24B]"
+        >
+          <p className="font-medium">{withdrawPage.migrationTitle}</p>
+          <p className="mt-1 text-[#E9A24B]/85">{withdrawPage.migrationBody}</p>
+        </div>
       )}
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -53,12 +67,14 @@ export default async function WithdrawalsPage() {
       </div>
 
       <Card title={withdrawPage.formTitle}>
-        <WithdrawForm available={account.balance} currency={account.currency} />
+        {/* Modulo disabilitato finché la tabella non esiste: premerlo darebbe
+            solo un errore, e chiederlo due volte non lo farebbe funzionare. */}
+        <WithdrawForm available={ready ? account.balance : 0} currency={account.currency} />
         <p className="mt-5 border-t border-line pt-4 text-xs text-mist">{withdrawPage.holdNotice}</p>
       </Card>
 
       <Card title={withdrawPage.listTitle}>
-        <WithdrawalList entries={withdrawals} currency={account.currency} />
+        <WithdrawalList entries={entries} currency={account.currency} />
       </Card>
     </div>
   );
