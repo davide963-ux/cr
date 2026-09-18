@@ -27,6 +27,16 @@
 -- li calcolano da sé invece di accettare la moltiplicazione di qualcun altro.
 -- ============================================================================
 
+
+do $$
+begin
+  if not (exists (select 1 from information_schema.columns where table_schema='public' and table_name='withdrawals' and column_name='destination' and is_nullable='YES')) then
+    raise exception 'Manca un passaggio precedente: esegui prima 0003_optional_destination.sql (e le precedenti). Esegui STATO.sql per l''elenco completo, in ordine.'
+      using errcode = '55000';
+  end if;
+end
+$$;
+
 -- ─────────────── Vecchie firme, da togliere ───────────────
 -- Cambia il numero di parametri: senza il drop resterebbero affiancate alla
 -- nuova, e PostgREST non saprebbe quale scegliere (PGRST203).
