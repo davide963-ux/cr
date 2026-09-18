@@ -4,8 +4,8 @@ import { Card } from "@/components/dashboard/Card";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WithdrawForm } from "@/components/dashboard/WithdrawForm";
 import { WithdrawalList } from "@/components/dashboard/WithdrawalList";
+import { Money, Btc } from "@/components/dashboard/Money";
 import { adminPage, withdrawPage } from "@/data/content";
-import { formatAmount } from "@/lib/format";
 import { getAccount } from "@/services/account/accountService";
 import { heldTotal, listOwnWithdrawals } from "@/services/account/withdrawalService";
 
@@ -52,16 +52,18 @@ export default async function WithdrawalsPage() {
             `balance` è già il saldo disponibile: la richiesta sottrae subito
             l'importo, quindi non c'è nulla da scalare qui.
           */}
-          <p className="font-display tabular glow-mint mt-2 text-3xl">
-            {formatAmount(account.balance, account.currency)}
-          </p>
+          <Money
+            sats={account.balanceSats}
+            currency={account.currency}
+            className="font-display tabular glow-mint mt-2 block text-3xl"
+          />
+          <Btc sats={account.balanceSats} className="mt-1 block text-xs text-mist" />
           <p className="mt-1 text-xs text-mist">{withdrawPage.availableHint}</p>
         </Card>
         <Card>
           <p className="text-sm text-mist">{withdrawPage.heldLabel}</p>
-          <p className="font-display tabular mt-2 text-3xl text-paper">
-            {formatAmount(held, account.currency)}
-          </p>
+          <Money sats={held} currency={account.currency} className="font-display tabular mt-2 block text-3xl text-paper" />
+          <Btc sats={held} className="mt-1 block text-xs text-mist" />
           <p className="mt-1 text-xs text-mist">{withdrawPage.heldHint}</p>
         </Card>
       </div>
@@ -69,7 +71,7 @@ export default async function WithdrawalsPage() {
       <Card title={withdrawPage.formTitle}>
         {/* Modulo disabilitato finché la tabella non esiste: premerlo darebbe
             solo un errore, e chiederlo due volte non lo farebbe funzionare. */}
-        <WithdrawForm available={ready ? account.balance : 0} currency={account.currency} />
+        <WithdrawForm availableSats={ready ? account.balanceSats : 0} currency={account.currency} />
         <p className="mt-5 border-t border-line pt-4 text-xs text-mist">{withdrawPage.holdNotice}</p>
       </Card>
 

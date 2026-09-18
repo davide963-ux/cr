@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card, DataRow } from "@/components/dashboard/Card";
+import { Money } from "@/components/dashboard/Money";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { PlaceholderAction } from "@/components/dashboard/PlaceholderAction";
 import { WalletCard } from "@/components/dashboard/WalletCard";
 import { walletPage } from "@/data/content";
-import { formatAmount } from "@/lib/format";
 import { getAccount } from "@/services/account/accountService";
 
 export const metadata: Metadata = { title: "Portafoglio" };
@@ -22,7 +22,7 @@ export default async function PortfolioPage() {
       <Card>
         <dl>
           <DataRow label={walletPage.usernameLabel} value={account.username || null} />
-          <DataRow label={walletPage.balanceLabel} value={formatAmount(account.balance, account.currency)} />
+          <DataRow label={walletPage.balanceLabel} value={<Money sats={account.balanceSats} currency={account.currency} />} />
         </dl>
       </Card>
 

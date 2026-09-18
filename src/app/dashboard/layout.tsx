@@ -37,7 +37,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <div className="dash relative isolate min-h-dvh lg:pl-[17rem]">
         {/* isolate + -z-10: l'alone resta dietro al contenuto di questo riquadro */}
         <div aria-hidden="true" className="dash-aura -z-10" />
-        <Sidebar items={items} balance={account.balance} currency={account.currency} />
+        <Sidebar items={items} balanceSats={account.balanceSats} currency={account.currency} />
         <main id="contenuto" tabIndex={-1} className="outline-none">
           <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">{children}</div>
         </main>

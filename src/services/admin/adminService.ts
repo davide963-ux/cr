@@ -1,7 +1,7 @@
 import "server-only";
 import { logRpcError } from "@/lib/supabase/rpcError";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { centsToUnits } from "@/services/account/accountService";
+import { readSats } from "@/services/account/accountService";
 import type { AdminUserRow, AdminWithdrawal, LedgerEntry } from "@/services/account/types";
 import { toWithdrawal, WITHDRAWAL_COLUMNS } from "@/services/account/withdrawalService";
 
@@ -16,7 +16,7 @@ export async function listUsers(): Promise<AdminUserRow[]> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, first_name, last_name, phone, city, balance_cents, currency, is_admin, created_at")
+    .select("id, email, first_name, last_name, phone, city, balance_sats, currency, is_admin, created_at")
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -29,7 +29,7 @@ export async function listUsers(): Promise<AdminUserRow[]> {
       fullName: fullName || null,
       phone: row.phone ?? null,
       city: row.city ?? null,
-      balance: centsToUnits(row.balance_cents),
+      balanceSats: readSats(row.balance_sats),
       currency: row.currency ?? "EUR",
       isAdmin: row.is_admin === true,
       createdAt: row.created_at ?? "",
@@ -42,7 +42,7 @@ export async function listRecentLedger(limit = 20): Promise<(LedgerEntry & { use
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("ledger_entries")
-    .select("id, user_id, amount_cents, balance_after_cents, reason, created_at")
+    .select("id, user_id, amount_sats, balance_after_sats, rate_eur_cents, reason, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -51,8 +51,9 @@ export async function listRecentLedger(limit = 20): Promise<(LedgerEntry & { use
   return data.map((row) => ({
     id: row.id,
     userId: row.user_id,
-    amount: centsToUnits(row.amount_cents),
-    balanceAfter: centsToUnits(row.balance_after_cents),
+    amountSats: readSats(row.amount_sats),
+    balanceAfterSats: readSats(row.balance_after_sats),
+    rateEurCents: typeof row.rate_eur_cents === "number" ? row.rate_eur_cents : null,
     reason: row.reason ?? "",
     createdAt: row.created_at ?? "",
   }));
@@ -66,17 +67,22 @@ export async function listRecentLedger(limit = 20): Promise<(LedgerEntry & { use
 export async function adjustBalance(
   targetUserId: string,
   deltaCents: number,
+  rateEurCents: number,
   reason: string,
-): Promise<{ ok: true; balance: number } | { ok: false; code: string }> {
+): Promise<{ ok: true; balanceSats: number } | { ok: false; code: string }> {
   const supabase = await createSupabaseServerClient();
+  // L'amministratore ragiona in euro, il conto vive in satoshi: la
+  // conversione la fa il database, con il cambio che la pagina gli passa e
+  // di cui verifica la plausibilità prima di usarlo.
   const { data, error } = await supabase.rpc("admin_adjust_balance", {
     target_user: targetUserId,
     delta_cents: deltaCents,
+    rate_eur_cents: rateEurCents,
     adjust_reason: reason,
   });
 
   if (error) return { ok: false, code: logRpcError("admin_adjust_balance", error) };
-  return { ok: true, balance: centsToUnits(typeof data === "number" ? data : 0) };
+  return { ok: true, balanceSats: readSats(typeof data === "number" ? data : 0) };
 }
 
 /** Promuove o revoca un amministratore, sempre passando dal database. */

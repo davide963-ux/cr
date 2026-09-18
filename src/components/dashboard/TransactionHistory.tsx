@@ -1,9 +1,9 @@
 import { Icon } from "@/components/icons/Icon";
 import { dashboardHome } from "@/data/content";
 import { cn } from "@/lib/cn";
-import { formatAmount } from "@/lib/format";
 import type { LedgerEntry } from "@/services/account/types";
 import { EmptyState } from "./Card";
+import { Money, Btc } from "./Money";
 
 /**
  * Cronologia dei movimenti, presa dal registro.
@@ -37,7 +37,7 @@ export function TransactionHistory({ entries, currency }: { entries: LedgerEntry
         ) : (
           <ul className="space-y-3">
             {entries.map((entry) => {
-              const positive = entry.amount >= 0;
+              const positive = entry.amountSats >= 0;
               return (
                 <li
                   key={entry.id}
@@ -62,13 +62,17 @@ export function TransactionHistory({ entries, currency }: { entries: LedgerEntry
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className={cn("tabular font-medium", positive ? "text-mint" : "text-loss")}>
-                      {positive ? "+" : ""}
-                      {formatAmount(entry.amount, currency)}
-                    </p>
-                    <p className="tabular mt-0.5 text-xs text-mist">
-                      {formatAmount(entry.balanceAfter, currency)}
-                    </p>
+                    {/* La quantità è il fatto; il controvalore è di oggi. */}
+                    <Btc
+                      sats={entry.amountSats}
+                      className={cn("tabular block font-medium", positive ? "text-mint" : "text-loss")}
+                    />
+                    <Money
+                      sats={entry.amountSats}
+                      currency={currency}
+                      signed
+                      className="tabular mt-0.5 block text-xs text-mist"
+                    />
                   </div>
                 </li>
               );

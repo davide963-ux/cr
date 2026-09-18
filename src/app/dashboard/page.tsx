@@ -8,7 +8,7 @@ import { TopBar } from "@/components/dashboard/TopBar";
 import { TransactionHistory } from "@/components/dashboard/TransactionHistory";
 import { WalletCard } from "@/components/dashboard/WalletCard";
 import { adminPage, dashboardHome } from "@/data/content";
-import { getAccount, getOwnLedger, getWeeklyChange } from "@/services/account/accountService";
+import { getAccount, getOwnLedger } from "@/services/account/accountService";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -17,9 +17,7 @@ export default async function DashboardPage() {
   const account = await getAccount();
   if (!account) notFound();
 
-  const [ledger, weekly] = account.profileReady
-    ? await Promise.all([getOwnLedger(), getWeeklyChange(account.balance)])
-    : [[], null];
+  const ledger = account.profileReady ? await getOwnLedger() : [];
 
   return (
     <div className="dash-stack space-y-8">
@@ -32,18 +30,17 @@ export default async function DashboardPage() {
       )}
 
       <StatTiles
-        balance={account.balance}
+        balanceSats={account.balanceSats}
         currency={account.currency}
         // Nessun wallet è ancora collegato: il conteggio è reale, non un segnaposto.
         walletCount={account.walletAddress ? 1 : 0}
-        weekly={weekly}
       />
 
       <QuickActions />
 
       <BitcoinPanel currency={account.currency} />
 
-      <FiatAccounts balance={account.balance} currency={account.currency} />
+      <FiatAccounts balanceSats={account.balanceSats} currency={account.currency} />
 
       <WalletCard
         account={account}

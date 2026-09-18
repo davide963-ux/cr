@@ -4,7 +4,9 @@ import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/icons/Icon";
 import { dashboardHome } from "@/data/content";
 import { cn } from "@/lib/cn";
-import { formatAmount, formatBtc } from "@/lib/format";
+import { formatAmount } from "@/lib/format";
+import { satsToCurrency } from "@/lib/money";
+import { Money, Btc } from "./Money";
 import { useRates } from "./RatesProvider";
 import { Shimmer } from "./Shimmer";
 
@@ -51,23 +53,13 @@ function Change({ amount, percent, currency }: { amount: number; percent: number
 }
 
 interface StatTilesProps {
-  balance: number;
+  balanceSats: number;
   currency: string;
   walletCount: number;
-  weekly: { amount: number; percent: number | null } | null;
 }
 
-export function StatTiles({ balance, currency, walletCount, weekly }: StatTilesProps) {
+export function StatTiles({ balanceSats, currency, walletCount }: StatTilesProps) {
   const rates = useRates();
-
-  const btcValue =
-    rates.status === "ready" ? (
-      formatBtc(balance / rates.rates.eur)
-    ) : rates.status === "loading" ? (
-      <Shimmer label={dashboardHome.ratesLoading} className="h-7 w-40 align-middle" />
-    ) : (
-      <span className="text-mist">—</span>
-    );
 
   const btcFooter =
     rates.status === "ready"
@@ -76,19 +68,35 @@ export function StatTiles({ balance, currency, walletCount, weekly }: StatTilesP
         ? dashboardHome.ratesLoading
         : dashboardHome.ratesUnavailable;
 
+  /*
+   * Quanto del saldo attuale è dovuto al movimento del prezzo negli ultimi
+   * sette giorni. Non somma depositi e prelievi — quelli si leggono nella
+   * cronologia: risponde alla domanda "perché ieri avevo una cifra diversa
+   * senza aver fatto nulla", che prima non aveva risposta da nessuna parte.
+   */
+  const priceEffect =
+    rates.status === "ready" && rates.rates.change7d !== null
+      ? (() => {
+          const now = satsToCurrency(balanceSats, rates.rates.eur);
+          const before = now / (1 + rates.rates.change7d / 100);
+          return { amount: now - before, percent: rates.rates.change7d };
+        })()
+      : null;
+
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Tile
         icon="wallet"
         tint="mint"
         label={dashboardHome.balanceLabel}
-        value={<span className="glow-mint">{formatAmount(balance, currency)}</span>}
-        footer={dashboardHome.balanceTileFooter}
+        value={<Money sats={balanceSats} currency={currency} className="glow-mint" />}
+        footer={dashboardHome.balanceFollowsBtc}
       />
       <Tile
         icon="chart"
         label={dashboardHome.btcTileLabel}
-        value={btcValue}
+        // La quantità in bitcoin è il dato conservato: c'è sempre, cambio o no.
+        value={<Btc sats={balanceSats} />}
         footer={btcFooter}
       />
       <Tile
@@ -99,15 +107,17 @@ export function StatTiles({ balance, currency, walletCount, weekly }: StatTilesP
       />
       <Tile
         icon="settle"
-        label={dashboardHome.weeklyLabel}
+        label={dashboardHome.weeklyPriceLabel}
         value={
-          weekly ? (
-            <Change amount={weekly.amount} percent={weekly.percent} currency={currency} />
+          priceEffect ? (
+            <Change amount={priceEffect.amount} percent={priceEffect.percent} currency={currency} />
+          ) : rates.status === "loading" ? (
+            <Shimmer label={dashboardHome.ratesLoading} className="h-7 w-40 align-middle" />
           ) : (
             <span className="text-mist">—</span>
           )
         }
-        footer={weekly ? dashboardHome.weeklyFooter : dashboardHome.weeklyNone}
+        footer={priceEffect ? dashboardHome.weeklyPriceFooter : dashboardHome.weeklyPriceNone}
       />
     </div>
   );

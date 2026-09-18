@@ -363,6 +363,10 @@ export const dashboardHome = {
 
   // Le quattro caselle in alto
   balanceLabel: "Saldo disponibile",
+  balanceFollowsBtc: "Segue il prezzo del bitcoin",
+  weeklyPriceLabel: "Effetto del prezzo, 7 giorni",
+  weeklyPriceFooter: "Quanto il movimento del bitcoin ha spostato il saldo attuale",
+  weeklyPriceNone: "Variazione a 7 giorni non disponibile",
   balanceTileFooter: "Aggiornato dal registro movimenti",
   btcTileLabel: "Portafoglio Bitcoin",
   walletsLabel: "Portafogli attivi",
@@ -528,6 +532,7 @@ export const withdrawPage = {
   description:
     "Richiedi il trasferimento di una somma verso il tuo conto o portafoglio. Ogni richiesta viene verificata da un operatore prima di essere eseguita.",
 
+  loadingValue: "Calcolo del controvalore…",
   availableLabel: "Saldo disponibile",
   availableHint: "Quanto puoi richiedere adesso",
   heldLabel: "In attesa di approvazione",
@@ -537,6 +542,10 @@ export const withdrawPage = {
   amountLabel: "Importo in euro",
   amountPlaceholder: "250,00",
   amountHint: "Usa la virgola per i decimali, ad esempio 1234,56.",
+  amountConverted: "Riceverai {btc}, fissati adesso al cambio di oggi.",
+  rateUnavailable:
+    "Cambio bitcoin non disponibile: senza non è possibile convertire l'importo. Ricarica la pagina fra qualche istante.",
+  rateUnavailableShort: "Cambio non disponibile.",
   destinationLabel: "IBAN o indirizzo del portafoglio (facoltativo)",
   destinationPlaceholder: "IT60X0542811101000000123456",
   destinationHint:
@@ -549,7 +558,8 @@ export const withdrawPage = {
   submitted: "Richiesta inviata. L'importo è stato trattenuto e resta in attesa di approvazione.",
 
   holdNotice:
-    "L'importo viene trattenuto subito, così non è possibile richiedere due volte lo stesso denaro. Se la richiesta viene rifiutata o annullata, torna sul saldo.",
+    "Quello che viene trattenuto è una quantità di bitcoin, fissata al momento della richiesta: è quella che riceverai. Se il prezzo sale prima dell'approvazione riceverai più euro di quelli scritti, se scende meno. L'importo è trattenuto subito, così non è possibile richiedere due volte lo stesso denaro; se la richiesta viene rifiutata o annullata torna sul saldo.",
+  requestedAt: "Chiesti {amount} al cambio di allora",
 
   listTitle: "Le tue richieste",
   listEmpty: "Non hai ancora richiesto prelievi.",
@@ -580,6 +590,8 @@ export const withdrawPage = {
     tooManyPending: "Hai già cinque richieste in attesa. Attendi che vengano evase.",
     notFound: "Richiesta non trovata.",
     alreadyDecided: "Questa richiesta è già stata evasa.",
+    rateUnavailable:
+      "Cambio bitcoin non disponibile: senza non è possibile convertire l'importo in bitcoin. Ricarica la pagina fra qualche istante.",
     migrationMissing:
       "Il database non è ancora predisposto per i prelievi: esegui supabase/migrations/0002_withdrawals.sql e 0003_optional_destination.sql nell'SQL Editor di Supabase. Se le hai appena eseguite, attendi qualche secondo: Supabase deve ricaricare lo schema.",
     generic: "Operazione non riuscita. Riprova.",
@@ -640,6 +652,8 @@ export const adminPage = {
   withdrawalsMigrationMissing:
     "La tabella dei prelievi non esiste ancora: esegui supabase/migrations/0002_withdrawals.sql e 0003_optional_destination.sql.",
   withdrawalsPendingEmpty: "Nessuna richiesta in attesa. Tutto evaso.",
+  withdrawalAmountNote: "Quantità fissata alla richiesta; il controvalore è quello di oggi",
+  amountPreview: "Corrisponde a {btc} al cambio attuale",
   withdrawalDestination: "Destinazione",
   withdrawalDestinationMissing: "Nessuna destinazione indicata: contatta l'utente per concordarla prima di approvare.",
   withdrawalNote: "Nota dell'utente",
@@ -667,6 +681,8 @@ export const adminPage = {
     constraint: "Operazione rifiutata: il saldo non può diventare negativo.",
     alreadyDecided: "Questa richiesta è già stata evasa da qualcun altro.",
     decisionRequired: "Per rifiutare devi indicare il motivo.",
+    rateMissing:
+      "Cambio bitcoin non disponibile: senza non è possibile convertire un importo in euro. Ricarica la pagina.",
     migrationMissing: "Il database non è ancora predisposto: esegui la migrazione SQL.",
     generic: "Operazione non riuscita. Riprova.",
   },

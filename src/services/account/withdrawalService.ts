@@ -1,16 +1,17 @@
 import "server-only";
 import { logRpcError } from "@/lib/supabase/rpcError";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
-import { centsToUnits } from "./accountService";
+import { readSats } from "./accountService";
 import type { Withdrawal, WithdrawalStatus } from "./types";
 
 /** Colonne lette ovunque: una sola definizione da tenere allineata. */
 export const WITHDRAWAL_COLUMNS =
-  "id, user_id, amount_cents, destination, note, status, decision_reason, decided_by, decided_at, created_at";
+  "id, user_id, amount_sats, requested_rate_eur_cents, destination, note, status, decision_reason, decided_by, decided_at, created_at";
 
 interface WithdrawalRow {
   id: string;
-  amount_cents: number | null;
+  amount_sats: number | null;
+  requested_rate_eur_cents: number | null;
   destination: string | null;
   note: string | null;
   status: string | null;
@@ -29,7 +30,9 @@ function toStatus(value: string | null): WithdrawalStatus {
 export function toWithdrawal(row: WithdrawalRow): Withdrawal {
   return {
     id: row.id,
-    amount: centsToUnits(row.amount_cents),
+    amountSats: readSats(row.amount_sats),
+    requestedRateEurCents:
+      typeof row.requested_rate_eur_cents === "number" ? row.requested_rate_eur_cents : null,
     destination: row.destination?.trim() || null,
     note: row.note,
     status: toStatus(row.status),
@@ -74,12 +77,12 @@ export async function listOwnWithdrawals(limit = 20): Promise<Withdrawal[] | nul
  * Quanto è trattenuto dalle richieste ancora aperte.
  *
  * Non è un saldo separato: è la somma degli importi già sottratti da
- * `balance_cents`. Serve solo a mostrare dov'è finito quel denaro.
+ * `balance_sats`. Serve solo a mostrare dov'è finito quel denaro.
  */
 export function heldTotal(withdrawals: Withdrawal[] | null): number {
   return (withdrawals ?? [])
     .filter((w) => w.status === "pending")
-    .reduce((sum, w) => sum + w.amount, 0);
+    .reduce((sum, w) => sum + w.amountSats, 0);
 }
 
 /**
@@ -88,12 +91,16 @@ export function heldTotal(withdrawals: Withdrawal[] | null): number {
  */
 export async function requestWithdrawal(
   amountCents: number,
+  rateEurCents: number,
   destination: string | null,
   note: string | null,
 ): Promise<{ ok: true; id: string } | { ok: false; code: string }> {
   const supabase = await createSupabaseServerClient();
+  // Si mandano importo e cambio, non i satoshi: il conto lo rifà il database,
+  // che del cambio verifica la plausibilità invece di fidarsi.
   const { data, error } = await supabase.rpc("request_withdrawal", {
     amount_cents: amountCents,
+    rate_eur_cents: rateEurCents,
     destination,
     user_note: note,
   });

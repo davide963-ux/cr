@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { withdrawPage } from "@/data/content";
-import { parseAmountToCents } from "@/lib/money";
+import { isPlausibleRate, parseAmountToCents } from "@/lib/money";
 import { sanitizeText } from "@/lib/sanitize";
 import { isSchemaMissing } from "@/lib/supabase/rpcError";
 import { getAccount } from "@/services/account/accountService";
@@ -65,8 +65,19 @@ export async function requestWithdrawalAction(
 
   if (amountCents === null || amountCents <= 0) return { error: withdrawPage.errors.invalidAmount };
 
+  /*
+   * Il cambio arriva dal browser: il server non può chiederlo a CoinGecko,
+   * che rifiuta gli IP dei datacenter. Qui si controlla che sia plausibile
+   * solo per dare un messaggio chiaro — il controllo che conta è nella
+   * funzione SQL, che rifarà anche la moltiplicazione da sé.
+   */
+  const rateCents = Number(formData.get("rate_eur_cents"));
+  if (!Number.isFinite(rateCents) || !isPlausibleRate(rateCents / 100)) {
+    return { error: withdrawPage.errors.rateUnavailable };
+  }
+
   // La destinazione è facoltativa: se manca, la concorda l'operatore.
-  const result = await requestWithdrawal(amountCents, destination || null, note || null);
+  const result = await requestWithdrawal(amountCents, rateCents, destination || null, note || null);
   if (!result.ok) return { error: messageForCode(result.code) };
 
   revalidatePath("/dashboard/prelievi");

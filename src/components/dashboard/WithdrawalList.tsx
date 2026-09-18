@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import { cancelWithdrawalAction } from "@/app/dashboard/prelievi/actions";
 import { Button } from "@/components/ui/Button";
 import { withdrawPage } from "@/data/content";
-import { formatAmount } from "@/lib/format";
 import type { Withdrawal } from "@/services/account/types";
 import { EmptyState } from "./Card";
+import { Money, Btc } from "./Money";
 import { WithdrawalStatus } from "./WithdrawalStatus";
 
 /** Ritiro di una richiesta ancora in attesa: un modulo per riga. */
@@ -43,12 +43,13 @@ export function WithdrawalList({ entries, currency }: { entries: Withdrawal[]; c
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
+              {/* La quantità in bitcoin è ciò che riceverà: viene prima.
+                  Il controvalore è di oggi, e cambierà ancora. */}
               <div className="flex flex-wrap items-center gap-2.5">
-                <p className="font-wide tabular text-lg font-semibold text-paper">
-                  {formatAmount(entry.amount, currency)}
-                </p>
+                <Btc sats={entry.amountSats} className="font-wide tabular text-lg font-semibold text-paper" />
                 <WithdrawalStatus status={entry.status} />
               </div>
+              <Money sats={entry.amountSats} currency={currency} className="tabular mt-0.5 block text-sm text-mist" />
               <p className="tabular mt-1 text-xs text-mist">
                 {new Date(entry.createdAt).toLocaleString("it-IT")}
               </p>
