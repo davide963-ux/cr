@@ -16,24 +16,54 @@ interface Market {
   low24h: number;
   volume24h: number;
   dominance: number | null;
-  /** Ultime 24 ore, un punto all'ora. */
-  series: number[];
 }
 
-type State = { status: "loading" } | { status: "ready"; market: Market } | { status: "failed" };
+/** Ultime 24 ore: prezzi e relativi istanti, della stessa lunghezza. */
+interface Series {
+  prices: number[];
+  times: number[];
+}
 
-const MARKETS_URL =
-  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=eur&ids=bitcoin&sparkline=true&price_change_percentage=24h";
-const GLOBAL_URL = "https://api.coingecko.com/api/v3/global";
+type State =
+  | { status: "loading" }
+  | { status: "ready"; market: Market; series: Series | null }
+  | { status: "failed" };
+
+const API = "https://api.coingecko.com/api/v3";
+/** Punti disegnati: il grafico a 24 ore ne restituisce ~288, uno ogni 5 minuti. */
+const MAX_POINTS = 72;
+/**
+ * Scarto massimo tollerato fra l'ultimo punto del grafico e il prezzo corrente.
+ * Le due chiamate arrivano dalla stessa fonte a pochi istanti di distanza: se i
+ * valori divergono così tanto, non stanno misurando la stessa cosa (è successo
+ * con una serie in dollari sotto un prezzo in euro). Meglio nessun grafico che
+ * un asse dei prezzi sbagliato.
+ */
+const MAX_DRIFT = 0.1;
 
 function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-/** Ora locale del punto i-esimo, contando all'indietro dall'ultimo. */
-function hourLabel(index: number, total: number): string {
-  const date = new Date(Date.now() - (total - 1 - index) * 60 * 60 * 1000);
-  return `${date.getHours().toString().padStart(2, "0")}:00`;
+/** Riduce i punti mantenendo esattamente il primo e l'ultimo. */
+function thin<T>(items: T[], max: number): T[] {
+  if (items.length <= max) return items;
+  const step = (items.length - 1) / (max - 1);
+  const kept: T[] = [];
+  for (let i = 0; i < max; i += 1) {
+    const item = items[Math.round(i * step)];
+    if (item !== undefined) kept.push(item);
+  }
+  return kept;
+}
+
+function clockLabel(ms: number): string {
+  const date = new Date(ms);
+  return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+}
+
+async function readJson(response: Response | null): Promise<unknown> {
+  return response?.ok ? response.json() : null;
 }
 
 /**
@@ -44,7 +74,11 @@ function hourLabel(index: number, total: number): string {
  * Qui i dati arrivano da CoinGecko e il grafico è un SVG che usa i colori del
  * sito, quindi la scheda è coerente con tutto il resto.
  *
- * La richiesta parte dal browser: CoinGecko rifiuta spesso gli IP dei
+ * La serie del grafico arriva da /market_chart e non dalla sparkline di
+ * /coins/markets: quella ignora vs_currency e risponde sempre in dollari,
+ * quindi l'asse mostrava cifre più alte del 15% circa rispetto al prezzo.
+ *
+ * Le richieste partono dal browser: CoinGecko rifiuta spesso gli IP dei
  * datacenter, Vercel compreso.
  */
 export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
@@ -52,13 +86,16 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
 
   useEffect(() => {
     const controller = new AbortController();
+    const vs = currency.toLowerCase();
+    const get = (path: string) => fetch(`${API}${path}`, { signal: controller.signal });
 
     (async () => {
       try {
-        const [marketsRes, globalRes] = await Promise.all([
-          fetch(MARKETS_URL, { signal: controller.signal }),
-          // La dominanza è un di più: se manca, la scheda resta utile.
-          fetch(GLOBAL_URL, { signal: controller.signal }).catch(() => null),
+        const [marketsRes, chartRes, globalRes] = await Promise.all([
+          get(`/coins/markets?vs_currency=${vs}&ids=bitcoin&price_change_percentage=24h`),
+          // Grafico e dominanza sono un di più: senza, la scheda resta utile.
+          get(`/coins/bitcoin/market_chart?vs_currency=${vs}&days=1`).catch(() => null),
+          get("/global").catch(() => null),
         ]);
         if (!marketsRes.ok) throw new Error(`HTTP ${marketsRes.status}`);
 
@@ -70,20 +107,31 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
         const change24h = num(row.price_change_percentage_24h);
         if (price === null || change24h === null) throw new Error("dati incompleti");
 
-        const sparkline = row.sparkline_in_7d as { price?: unknown } | undefined;
-        const series = Array.isArray(sparkline?.price)
-          ? sparkline.price.map(num).filter((p): p is number => p !== null).slice(-24)
+        const chartBody = (await readJson(chartRes)) as { prices?: unknown } | null;
+        const pairs = Array.isArray(chartBody?.prices)
+          ? thin(
+              chartBody.prices.filter(
+                (pair): pair is [number, number] =>
+                  Array.isArray(pair) && num(pair[0]) !== null && num(pair[1]) !== null,
+              ),
+              MAX_POINTS,
+            )
           : [];
 
-        let dominance: number | null = null;
-        if (globalRes?.ok) {
-          const globalBody: unknown = await globalRes.json();
-          const data = (globalBody as { data?: { market_cap_percentage?: Record<string, unknown> } })?.data;
-          dominance = num(data?.market_cap_percentage?.btc);
-        }
+        const latest = pairs.at(-1)?.[1];
+        const drifted = latest === undefined || Math.abs(latest - price) / price > MAX_DRIFT;
+        const series: Series | null =
+          pairs.length > 1 && !drifted
+            ? { times: pairs.map((p) => p[0]), prices: pairs.map((p) => p[1]) }
+            : null;
+
+        const globalBody = (await readJson(globalRes)) as
+          | { data?: { market_cap_percentage?: Record<string, unknown> } }
+          | null;
 
         setState({
           status: "ready",
+          series,
           market: {
             price,
             change24h,
@@ -91,8 +139,7 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
             high24h: num(row.high_24h) ?? 0,
             low24h: num(row.low_24h) ?? 0,
             volume24h: num(row.total_volume) ?? 0,
-            dominance,
-            series,
+            dominance: num(globalBody?.data?.market_cap_percentage?.btc),
           },
         });
       } catch (error) {
@@ -102,10 +149,17 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
     })();
 
     return () => controller.abort();
-  }, []);
+  }, [currency]);
 
   const market = state.status === "ready" ? state.market : null;
-  const geometry = market && market.series.length > 1 ? buildChartGeometry(market.series) : null;
+  const series = state.status === "ready" ? state.series : null;
+  const geometry = series ? buildChartGeometry(series.prices) : null;
+  // Cinque orari equidistanti, presi dagli istanti reali della serie.
+  const timeLabels = series
+    ? Array.from({ length: 5 }, (_, i) => series.times[Math.round((i * (series.times.length - 1)) / 4)])
+        .filter((time): time is number => time !== undefined)
+        .map(clockLabel)
+    : [];
   const positive = (market?.change24h ?? 0) >= 0;
   const tint = FEATURED_ASSET.tint;
 
@@ -217,11 +271,11 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
               )}
             </div>
 
-            {geometry && market ? (
+            {geometry ? (
               <div className="ml-[5.5rem] mt-2 flex justify-between text-[0.6875rem] text-mist/80">
-                {[0, 6, 12, 18, market.series.length - 1].map((i) => (
-                  <span key={i} className="tabular">
-                    {hourLabel(i, market.series.length)}
+                {timeLabels.map((label, index) => (
+                  <span key={`${label}-${index}`} className="tabular">
+                    {label}
                   </span>
                 ))}
               </div>
