@@ -34,6 +34,11 @@ export function TradingViewWidget({ widget, config, className }: TradingViewWidg
 
     const host = document.createElement("div");
     host.className = "tradingview-widget-container__widget";
+    // Necessarie perché `autosize` funzioni: lo script misura QUESTO div, e
+    // senza dimensioni ripiega su una misura fissa, lasciando il widget
+    // rimpicciolito in un angolo del riquadro.
+    host.style.height = "100%";
+    host.style.width = "100%";
 
     const script = document.createElement("script");
     script.src = `${EMBED_BASE}${widget}.js`;

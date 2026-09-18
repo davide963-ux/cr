@@ -28,13 +28,21 @@ export function BitcoinPanel() {
 
       <TradingViewWidget
         widget="symbol-overview"
-        className="h-[340px] w-full p-2 sm:h-[380px] sm:p-4"
+        className="h-[380px] w-full p-2 sm:h-[420px] sm:p-4"
         config={{
           symbols: [[FEATURED_ASSET.name, `${FEATURED_ASSET.tvSymbol}|1D`]],
           chartOnly: false,
+          // `width`/`height` accanto ad `autosize`: è quello che genera il
+          // configuratore di TradingView, e copre le versioni del widget che
+          // ignorano l'uno o l'altro.
+          width: "100%",
+          height: "100%",
           locale: "it",
           colorTheme: "dark",
           isTransparent: true,
+          // Le versioni recenti del widget leggono questo invece di
+          // `isTransparent`: senza, il riquadro resta bianco.
+          backgroundColor: "rgba(13, 21, 18, 0)",
           autosize: true,
           showVolume: false,
           showMA: false,
