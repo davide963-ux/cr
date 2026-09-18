@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
-import type { AccountUser } from "./types";
+import type { AccountUser, LedgerEntry } from "./types";
 
 function readString(value: unknown): string | null {
   return typeof value === "string" && value.trim() !== "" ? value : null;
@@ -77,3 +77,52 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
     profileReady: true,
   };
 });
+
+/**
+ * Movimenti dell'utente corrente. Le policy RLS restituiscono solo le righe
+ * che gli appartengono, quindi qui non serve filtrare.
+ */
+export async function getOwnLedger(limit = 10): Promise<LedgerEntry[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("ledger_entries")
+    .select("id, amount_cents, balance_after_cents, reason, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+
+  return data.map((row) => ({
+    id: row.id,
+    amount: centsToUnits(row.amount_cents),
+    balanceAfter: centsToUnits(row.balance_after_cents),
+    reason: row.reason ?? "",
+    createdAt: row.created_at ?? "",
+  }));
+}
+
+/**
+ * Variazione degli ultimi sette giorni, calcolata sui movimenti reali.
+ *
+ * La percentuale ha senso solo se il saldo di partenza non era zero: su un
+ * conto vuoto qualunque accredito sarebbe una crescita infinita, quindi in
+ * quel caso resta null e l'interfaccia mostra solo l'importo.
+ */
+export async function getWeeklyChange(
+  currentBalance: number,
+): Promise<{ amount: number; percent: number | null } | null> {
+  const supabase = await createSupabaseServerClient();
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await supabase
+    .from("ledger_entries")
+    .select("amount_cents")
+    .gte("created_at", since);
+
+  if (error || !data || data.length === 0) return null;
+
+  const amount = centsToUnits(data.reduce((sum, row) => sum + (row.amount_cents ?? 0), 0));
+  const startBalance = currentBalance - amount;
+  const percent = startBalance > 0 ? (amount / startBalance) * 100 : null;
+  return { amount, percent };
+}

@@ -348,21 +348,79 @@ export const dashboardShell = {
 
 export const dashboardHome = {
   title: "Dashboard",
-  welcome: "Benvenuto",
+  welcome: "Bentornato",
+  welcomeSubtitle: "Ecco cosa sta succedendo con il tuo account oggi",
+  greetingDefault: "Benvenuto",
+  greetingMorning: "Buongiorno",
+  greetingAfternoon: "Buon pomeriggio",
+  greetingEvening: "Buonasera",
+  support: "Supporto",
+
+  // Riepilogo nella barra laterale
+  sidebarBalanceLabel: "Saldo portafoglio",
+  statusOnline: "Online",
+
+  // Le quattro caselle in alto
   balanceLabel: "Saldo disponibile",
-  currencyLabel: "Valuta",
-  balanceNote: "Il saldo sarà aggiornato quando il sistema di pagamenti sarà collegato.",
-  btcLoading: "Conversione in corso…",
-  btcUnavailable: "Conversione in bitcoin non disponibile al momento.",
-  /** `{rate}` viene sostituito col cambio usato per il calcolo. */
-  btcRate: "1 BTC = {rate} · valore indicativo",
+  balanceTileFooter: "Aggiornato dal registro movimenti",
+  btcTileLabel: "Portafoglio Bitcoin",
+  walletsLabel: "Portafogli attivi",
+  walletsNone: "Nessun portafoglio configurato",
+  walletsActive: "Tutti i portafogli attivi",
+  weeklyLabel: "Variazione 7 giorni",
+  weeklyFooter: "Somma dei movimenti dell'ultima settimana",
+  weeklyNone: "Nessun movimento negli ultimi 7 giorni",
+
+  ratesLoading: "Cambio in aggiornamento…",
+  ratesUnavailable: "Cambio non disponibile",
+
+  // Scorciatoie
+  deposit: "Deposita",
+  depositDescription: "Aggiungi fondi al conto",
+  depositModalTitle: "Deposito non ancora disponibile",
+  depositModalBody:
+    "La funzione di deposito sarà attiva quando il sistema di pagamenti sarà collegato. Nessun pagamento viene elaborato in questa versione.",
+  exchange: "Compra/Vendi",
+  exchangeDescription: "Scambia criptovalute",
+  exchangeBadges: ["24/7", "Commissioni basse"],
+  exchangeModalTitle: "Scambio non ancora disponibile",
+  exchangeModalBody:
+    "La compravendita sarà attiva quando il sistema di scambio sarà collegato. In questa versione non viene eseguito alcun ordine.",
+  exportKey: "Esporta chiave",
+  exportKeyDescription: "Chiave del portafoglio",
+  exportKeyModalTitle: "Esportazione chiave non disponibile",
+  exportKeyModalBody:
+    "L'esportazione sarà possibile quando il sistema wallet sarà collegato, con le dovute verifiche di sicurezza. Nessuna chiave viene generata o conservata in questa versione.",
+
+  // Prezzo bitcoin
+  btcPanelTitle: "Prezzo Bitcoin",
+  btcPanelSubtitle: "Dati di mercato in tempo reale",
+
+  // Conti in valuta
+  fiatTitle: "Account Fiat",
+  fiatNote:
+    "Controvalori calcolati sul saldo in {currency} ai cambi correnti: sono indicativi, non conti separati.",
+  fiat: {
+    eur: "Euro",
+    gbp: "Sterlina britannica",
+    usd: "Dollaro USA",
+  },
+
+  // Cronologia
+  historyTitle: "Cronologia movimenti",
+  historySubtitle: "Tutti i movimenti registrati sul conto",
+  historyLive: "Dal registro",
+  historyEmpty: "Nessun movimento sul conto. Le operazioni compariranno qui.",
+
+  // Wallet
   walletTitle: "Il tuo wallet",
   walletAddressLabel: "Indirizzo wallet",
   walletEmpty: "Wallet non ancora configurato",
-  deposit: "Deposita",
-  depositModalTitle: "Deposito non ancora disponibile",
-  depositModalBody:
-    "La funzione di deposito sarà attiva quando il sistema wallet sarà collegato. Nessun pagamento viene elaborato in questa versione.",
+  balanceNote: "Il saldo sarà aggiornato quando il sistema di pagamenti sarà collegato.",
+  btcLoading: "Conversione in corso…",
+  btcUnavailable: "Conversione in bitcoin non disponibile al momento.",
+  btcRate: "1 BTC = {rate} · valore indicativo",
+  currencyLabel: "Valuta",
 };
 
 export const walletPage = {

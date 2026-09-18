@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
 import { Logo } from "@/components/layout/Logo";
-import { dashboardShell, type DashboardNavItem } from "@/data/content";
+import { dashboardHome, dashboardShell, type DashboardNavItem } from "@/data/content";
 import { cn } from "@/lib/cn";
+import { SidebarBalance } from "./SidebarBalance";
 
 /**
  * Vince la corrispondenza più lunga: "/dashboard" è prefisso di ogni
@@ -73,7 +74,15 @@ function SignOut({ full = false }: { full?: boolean }) {
   );
 }
 
-export function Sidebar({ items }: { items: DashboardNavItem[] }) {
+export function Sidebar({
+  items,
+  balance,
+  currency,
+}: {
+  items: DashboardNavItem[];
+  balance: number;
+  currency: string;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -117,7 +126,8 @@ export function Sidebar({ items }: { items: DashboardNavItem[] }) {
         hidden={!open}
         className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto border-t border-line bg-ink px-5 py-6 lg:hidden"
       >
-        <nav aria-label={dashboardShell.navLabel}>
+        <SidebarBalance balance={balance} currency={currency} />
+        <nav aria-label={dashboardShell.navLabel} className="mt-6">
           <NavLinks pathname={pathname} items={items} onNavigate={() => setOpen(false)} />
         </nav>
         <div className="mt-6 border-t border-line pt-4">
@@ -130,11 +140,18 @@ export function Sidebar({ items }: { items: DashboardNavItem[] }) {
         <div className="px-3">
           <Logo />
         </div>
-        <nav aria-label={dashboardShell.navLabel} className="mt-8 flex-1">
+        <div className="mt-6">
+          <SidebarBalance balance={balance} currency={currency} />
+        </div>
+        <nav aria-label={dashboardShell.navLabel} className="mt-6 flex-1">
           <NavLinks pathname={pathname} items={items} />
         </nav>
         <div className="border-t border-line pt-4">
           <SignOut full />
+          <p className="mt-3 flex items-center gap-2 px-3 text-xs text-mist">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-mint" />
+            {dashboardHome.statusOnline}
+          </p>
         </div>
       </aside>
     </>

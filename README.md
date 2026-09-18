@@ -175,6 +175,14 @@ flowchart LR
     AS -.->|nessun dato utente| DO["/dashboard/documentazione"]
 ```
 
+- **Formattazione del denaro deterministica**: `formatAmount` e `formatBtc`
+  costruiscono la stringa a mano invece di usare `Intl`. Per l'italiano i dati
+  ICU impostano `minimumGroupingDigits=2`, e Node e il browser lo applicano in
+  modo diverso (`1750,40 €` contro `1.750,40 €`): su cifre che compaiono sia
+  nell'HTML del server sia dopo l'idratazione, basta quello a rompere React.
+- **Un solo provider per i cambi**: `RatesProvider` chiede i cambi bitcoin una
+  volta per pagina, dal browser del visitatore, e li condivide con la barra
+  laterale, le caselle in alto e i conti in valuta.
 - **Una sola fonte dei dati**: `src/services/account/accountService.ts` traduce
   l'utente Supabase in `AccountUser`. Username e saldo non sono mai riscritti a
   mano in una pagina: quando arriverà un backend di pagamenti cambia solo quel file.
