@@ -6,18 +6,10 @@ import { FEATURED_ASSET } from "@/data/assets";
 import { dashboardHome } from "@/data/content";
 import { buildChartGeometry, CHART_VIEWBOX } from "@/lib/chart";
 import { cn } from "@/lib/cn";
+import { FRESH_MS, readCache, STALE_MS, writeCache } from "@/lib/sessionCache";
 import { formatAmount, formatCompact, formatPercent } from "@/lib/format";
+import { useRates } from "./RatesProvider";
 import { Shimmer } from "./Shimmer";
-
-interface Market {
-  price: number;
-  change24h: number;
-  marketCap: number;
-  high24h: number;
-  low24h: number;
-  volume24h: number;
-  dominance: number | null;
-}
 
 /** Ultime 24 ore: prezzi e relativi istanti, della stessa lunghezza. */
 interface Series {
@@ -25,9 +17,10 @@ interface Series {
   times: number[];
 }
 
+/** Solo ciò che questa scheda chiede da sé: il grafico e la dominanza. */
 type State =
   | { status: "loading" }
-  | { status: "ready"; market: Market; series: Series | null }
+  | { status: "ready"; series: Series | null; dominance: number | null }
   | { status: "failed" };
 
 const API = "https://api.coingecko.com/api/v3";
@@ -41,6 +34,14 @@ const MAX_POINTS = 72;
  * un asse dei prezzi sbagliato.
  */
 const MAX_DRIFT = 0.1;
+
+const CACHE_KEY = "btc-chart-v1";
+
+/** Quel che questa scheda si ricorda fra un caricamento e l'altro. */
+interface Snapshot {
+  series: Series | null;
+  dominance: number | null;
+}
 
 function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -91,22 +92,27 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
     const get = (path: string) => fetch(`${API}${path}`, { signal: controller.signal });
 
     (async () => {
+      // Come per i cambi: un ricaricamento riparte da quello che già sapeva.
+      const cached = readCache<Snapshot>(CACHE_KEY);
+      const age = cached ? Date.now() - cached.t : Infinity;
+      if (cached && age < STALE_MS) {
+        await Promise.resolve();
+        if (controller.signal.aborted) return;
+        setState({ status: "ready", series: cached.value.series, dominance: cached.value.dominance });
+        if (age < FRESH_MS) return;
+      }
+
       try {
-        const [marketsRes, chartRes, globalRes] = await Promise.all([
-          get(`/coins/markets?vs_currency=${vs}&ids=bitcoin&price_change_percentage=24h`),
-          // Grafico e dominanza sono un di più: senza, la scheda resta utile.
+        /*
+         * Prezzo, variazione, capitalizzazione, massimo, minimo e volume
+         * arrivano dal contesto: li chiede RatesProvider una volta per tutta
+         * la pagina. Qui restano solo le due richieste che servono a questa
+         * scheda e a nessun altro — il grafico e la dominanza.
+         */
+        const [chartRes, globalRes] = await Promise.all([
           get(`/coins/bitcoin/market_chart?vs_currency=${vs}&days=1`).catch(() => null),
           get("/global").catch(() => null),
         ]);
-        if (!marketsRes.ok) throw new Error(`HTTP ${marketsRes.status}`);
-
-        const body: unknown = await marketsRes.json();
-        const row = Array.isArray(body) ? (body[0] as Record<string, unknown> | undefined) : undefined;
-        if (!row) throw new Error("risposta vuota");
-
-        const price = num(row.current_price);
-        const change24h = num(row.price_change_percentage_24h);
-        if (price === null || change24h === null) throw new Error("dati incompleti");
 
         const chartBody = (await readJson(chartRes)) as { prices?: unknown } | null;
         const pairs = Array.isArray(chartBody?.prices)
@@ -119,32 +125,18 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
             )
           : [];
 
-        const latest = pairs.at(-1)?.[1];
-        const drifted = latest === undefined || Math.abs(latest - price) / price > MAX_DRIFT;
-        const series: Series | null =
-          pairs.length > 1 && !drifted
-            ? { times: pairs.map((p) => p[0]), prices: pairs.map((p) => p[1]) }
-            : null;
-
         const globalBody = (await readJson(globalRes)) as
           | { data?: { market_cap_percentage?: Record<string, unknown> } }
           | null;
 
-        setState({
-          status: "ready",
-          series,
-          market: {
-            price,
-            change24h,
-            marketCap: num(row.market_cap) ?? 0,
-            high24h: num(row.high_24h) ?? 0,
-            low24h: num(row.low_24h) ?? 0,
-            volume24h: num(row.total_volume) ?? 0,
-            dominance: num(globalBody?.data?.market_cap_percentage?.btc),
-          },
-        });
+        const snapshot: Snapshot = {
+          series: pairs.length > 1 ? { times: pairs.map((p) => p[0]), prices: pairs.map((p) => p[1]) } : null,
+          dominance: num(globalBody?.data?.market_cap_percentage?.btc),
+        };
+        writeCache<Snapshot>(CACHE_KEY, snapshot);
+        setState({ status: "ready", ...snapshot });
       } catch (error) {
-        if (!controller.signal.aborted) setState({ status: "failed" });
+        if (!controller.signal.aborted && !cached) setState({ status: "failed" });
         void error;
       }
     })();
@@ -152,8 +144,26 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
     return () => controller.abort();
   }, [currency]);
 
-  const market = state.status === "ready" ? state.market : null;
-  const series = state.status === "ready" ? state.series : null;
+  const rates = useRates();
+  const market = rates.status === "ready" ? rates.market : null;
+  const dominance = state.status === "ready" ? state.dominance : null;
+
+  /*
+   * Il controllo di scarto confronta la serie del grafico con il prezzo
+   * corrente. Quest'ultimo può arrivare da due chiamate diverse: si prende
+   * quello dei dati di mercato, e in mancanza il cambio semplice — altrimenti
+   * il fallimento di una richiesta che col grafico non c'entra nulla lo
+   * farebbe sparire pur avendone i dati.
+   */
+  const reference = market?.price ?? (rates.status === "ready" ? rates.rates.eur : null);
+  const raw = state.status === "ready" ? state.series : null;
+  const last = raw?.prices.at(-1) ?? null;
+  const drifted =
+    raw === null ||
+    reference === null ||
+    last === null ||
+    Math.abs(last - reference) / reference > MAX_DRIFT;
+  const series = drifted ? null : raw;
   const geometry = series ? buildChartGeometry(series.prices) : null;
   // Cinque orari equidistanti, presi dagli istanti reali della serie.
   const timeLabels = series
@@ -187,7 +197,7 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
       </header>
 
       <div className="p-6">
-        {state.status === "failed" ? (
+        {state.status === "failed" && market === null ? (
           <p className="py-10 text-center text-sm text-mist">{dashboardHome.btcPanelUnavailable}</p>
         ) : (
           <>
@@ -295,7 +305,7 @@ export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
                 { label: dashboardHome.btcVolume, value: market ? formatCompact(market.volume24h, currency) : "—" },
                 {
                   label: dashboardHome.btcDominance,
-                  value: market?.dominance != null ? formatPercent(market.dominance, 1) : "—",
+                  value: dominance !== null ? formatPercent(dominance, 1) : "—",
                 },
               ].map((item) => (
                 <div key={item.label} data-row="" className="bg-panel p-4">
