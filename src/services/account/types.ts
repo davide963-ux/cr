@@ -34,6 +34,12 @@ export interface AccountUser {
    * eseguita): l'interfaccia lo dice, invece di mostrare un saldo inventato.
    */
   profileReady: boolean;
+  /**
+   * Codice dell'errore che ha impedito la lettura, quando ce n'è stato uno.
+   * Distingue "tabella assente" da "colonna assente": sono due migrazioni
+   * diverse da eseguire, e prima venivano dette entrambe come la prima.
+   */
+  profileError: string | null;
 }
 
 /** Riga del registro movimenti. */

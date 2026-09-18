@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/dashboard/Card";
+import { MigrationNotice } from "@/components/dashboard/MigrationNotice";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { WithdrawForm } from "@/components/dashboard/WithdrawForm";
 import { WithdrawalList } from "@/components/dashboard/WithdrawalList";
 import { Money, Btc } from "@/components/dashboard/Money";
-import { adminPage, withdrawPage } from "@/data/content";
+import { withdrawPage } from "@/data/content";
 import { getAccount } from "@/services/account/accountService";
 import { heldTotal, listOwnWithdrawals } from "@/services/account/withdrawalService";
 
@@ -29,11 +30,7 @@ export default async function WithdrawalsPage() {
       <DashboardHeader title={withdrawPage.title} />
       <p className="max-w-2xl text-mist">{withdrawPage.description}</p>
 
-      {account.profileReady ? null : (
-        <p role="status" className="rounded-[var(--radius-card)] border border-line bg-panel-raised p-4 text-sm text-mist">
-          {adminPage.migrationBody}
-        </p>
-      )}
+      <MigrationNotice account={account} />
 
       {ready ? null : (
         <div

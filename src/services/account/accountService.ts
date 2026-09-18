@@ -1,4 +1,5 @@
 import "server-only";
+import { logRpcError } from "@/lib/supabase/rpcError";
 import { cache } from "react";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import type { AccountUser, LedgerEntry } from "./types";
@@ -37,11 +38,19 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
   const metaFirstName = readString(meta.first_name);
 
   const supabase = await createSupabaseServerClient();
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("first_name, last_name, phone, city, balance_sats, currency, is_admin, declared_amount_cents")
     .eq("id", user.id)
     .maybeSingle();
+
+  /*
+   * L'errore veniva scartato nella destrutturazione: qualunque guasto
+   * diventava "profilo assente", e l'interfaccia diceva sempre di eseguire
+   * la prima migrazione — anche quando quella c'era e a mancare era una
+   * colonna aggiunta da una successiva. Il codice serve a dire quale.
+   */
+  const profileError = error ? logRpcError("select profiles", error) : null;
 
   if (!profile) {
     return {
@@ -58,6 +67,7 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
       declaredAmount: typeof meta.amount === "number" ? meta.amount : null,
       isAdmin: false,
       profileReady: false,
+      profileError,
     };
   }
 
@@ -80,6 +90,7 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
       typeof profile.declared_amount_cents === "number" ? centsToUnits(profile.declared_amount_cents) : null,
     isAdmin: profile.is_admin === true,
     profileReady: true,
+    profileError: null,
   };
 });
 
