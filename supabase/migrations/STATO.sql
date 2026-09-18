@@ -26,6 +26,12 @@ from (
     (4, '0004_satoshi_balances.sql',
         exists (select 1 from information_schema.columns
                  where table_schema = 'public' and table_name = 'profiles'
-                   and column_name = 'balance_sats'))
+                   and column_name = 'balance_sats')),
+
+    -- La 0005 fissa il search_path delle due funzioni di conversione.
+    (5, '0005_harden_functions.sql',
+        exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname = 'check_btc_rate'
+                   and array_to_string(p.proconfig, ',') like '%search_path%'))
 ) as m(ordine, file, applicata)
 order by m.ordine;
