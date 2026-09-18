@@ -4,10 +4,11 @@ import { BitcoinPanel } from "@/components/dashboard/BitcoinPanel";
 import { FiatAccounts } from "@/components/dashboard/FiatAccounts";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { StatTiles } from "@/components/dashboard/StatTiles";
+import { MigrationNotice } from "@/components/dashboard/MigrationNotice";
 import { TopBar } from "@/components/dashboard/TopBar";
 import { TransactionHistory } from "@/components/dashboard/TransactionHistory";
 import { WalletCard } from "@/components/dashboard/WalletCard";
-import { adminPage, dashboardHome } from "@/data/content";
+import { dashboardHome } from "@/data/content";
 import { getAccount, getOwnLedger } from "@/services/account/accountService";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -23,11 +24,7 @@ export default async function DashboardPage() {
     <div className="dash-stack space-y-8">
       <TopBar username={account.username} email={account.email} />
 
-      {account.profileReady ? null : (
-        <p role="status" className="rounded-[var(--radius-card)] border border-line bg-panel-raised p-4 text-sm text-mist">
-          {adminPage.migrationBody}
-        </p>
-      )}
+      <MigrationNotice account={account} />
 
       <StatTiles
         balanceSats={account.balanceSats}

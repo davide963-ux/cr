@@ -25,7 +25,7 @@ export function BalanceCard({ account }: { account: AccountUser }) {
         </div>
       </div>
       <p className="border-t border-line px-6 py-4 text-xs text-mist sm:px-8">
-        {account.profileReady ? dashboardHome.balanceNote : adminPage.migrationBody}
+        {account.profileReady ? dashboardHome.balanceNote : adminPage.migrationTitle}
       </p>
     </section>
   );

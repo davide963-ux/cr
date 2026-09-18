@@ -670,7 +670,10 @@ export const adminPage = {
   rejectDone: "Richiesta rifiutata. L'importo è tornato sul saldo dell'utente.",
   migrationTitle: "Database non ancora predisposto",
   migrationBody:
-    "Esegui supabase/migrations/0001_profiles_and_ledger.sql nell'SQL Editor di Supabase, poi assegna il primo amministratore.",
+    "Esegui i file di supabase/migrations/ nell'SQL Editor di Supabase, in ordine di numero, saltando quelli già fatti. Se è la prima volta, dopo la 0001 assegna il primo amministratore.",
+  /** Il codice dice quale migrazione manca, invece di farle provare tutte. */
+  migrationBodyWithCode:
+    "Esegui i file di supabase/migrations/ nell'SQL Editor di Supabase, in ordine di numero, saltando quelli già fatti. Codice dell'errore: {code} — «42703» significa che una colonna non c'è ancora, quindi manca una migrazione successiva alla prima; «42P01» o «PGRST205» che manca proprio la tabella.",
   errors: {
     notAuthorised: "Non hai i permessi per questa operazione.",
     userNotFound: "Utente non trovato.",
