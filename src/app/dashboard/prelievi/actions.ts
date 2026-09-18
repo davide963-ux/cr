@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { withdrawPage } from "@/data/content";
 import { parseAmountToCents } from "@/lib/money";
 import { sanitizeText } from "@/lib/sanitize";
+import { isSchemaMissing } from "@/lib/supabase/rpcError";
 import { getAccount } from "@/services/account/accountService";
 import { cancelWithdrawal, requestWithdrawal } from "@/services/account/withdrawalService";
 
@@ -14,6 +15,11 @@ export interface WithdrawFormState {
 
 /** Messaggio leggibile per ogni errore sollevato dalle funzioni SQL. */
 function messageForCode(code: string): string {
+  // Prima di tutto: PostgREST risponde da sé, senza interpellare Postgres,
+  // quando non trova la funzione. Cercare solo i codici SQL lasciava passare
+  // proprio il caso più frequente — la migrazione non eseguita.
+  if (isSchemaMissing(code)) return withdrawPage.errors.migrationMissing;
+
   switch (code) {
     case "42501":
       return withdrawPage.errors.notAuthorised;
@@ -29,11 +35,10 @@ function messageForCode(code: string): string {
       return withdrawPage.errors.alreadyDecided;
     case "P0002":
       return withdrawPage.errors.notFound;
-    case "42883":
-    case "42P01":
-      return withdrawPage.errors.migrationMissing;
     default:
-      return withdrawPage.errors.generic;
+      // Il codice compare a schermo: senza, un errore non previsto resta
+      // indistinguibile da qualunque altro e non c'è nulla da riferire.
+      return withdrawPage.errors.genericWithCode.replace("{code}", code);
   }
 }
 

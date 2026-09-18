@@ -1,4 +1,5 @@
 import "server-only";
+import { logRpcError } from "@/lib/supabase/rpcError";
 import { createSupabaseServerClient, getCurrentUser } from "@/lib/supabase/server";
 import { centsToUnits } from "./accountService";
 import type { Withdrawal, WithdrawalStatus } from "./types";
@@ -39,13 +40,18 @@ export function toWithdrawal(row: WithdrawalRow): Withdrawal {
 }
 
 /**
- * Le richieste dell'utente collegato.
+ * Le richieste dell'utente collegato, oppure null se la tabella non c'è.
+ *
+ * Restituire [] anche in caso di errore faceva sembrare "nessuna richiesta"
+ * una migrazione non eseguita: la pagina taceva, e l'utente lo scopriva solo
+ * premendo "Invia". Null significa "non lo so", ed è una cosa diversa da
+ * "nessuna", quindi la pagina può dirlo prima che qualcuno compili un modulo.
  *
  * Il filtro su user_id è ridondante rispetto alla policy RLS, ma esplicito:
  * se un giorno la policy cambiasse, questa query continuerebbe a restituire
  * soltanto le righe di chi sta guardando.
  */
-export async function listOwnWithdrawals(limit = 20): Promise<Withdrawal[]> {
+export async function listOwnWithdrawals(limit = 20): Promise<Withdrawal[] | null> {
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -57,8 +63,11 @@ export async function listOwnWithdrawals(limit = 20): Promise<Withdrawal[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (error || !data) return [];
-  return data.map(toWithdrawal);
+  if (error) {
+    logRpcError("select withdrawals", error);
+    return null;
+  }
+  return (data ?? []).map(toWithdrawal);
 }
 
 /**
@@ -67,8 +76,8 @@ export async function listOwnWithdrawals(limit = 20): Promise<Withdrawal[]> {
  * Non è un saldo separato: è la somma degli importi già sottratti da
  * `balance_cents`. Serve solo a mostrare dov'è finito quel denaro.
  */
-export function heldTotal(withdrawals: Withdrawal[]): number {
-  return withdrawals
+export function heldTotal(withdrawals: Withdrawal[] | null): number {
+  return (withdrawals ?? [])
     .filter((w) => w.status === "pending")
     .reduce((sum, w) => sum + w.amount, 0);
 }
@@ -89,7 +98,7 @@ export async function requestWithdrawal(
     user_note: note,
   });
 
-  if (error) return { ok: false, code: error.code ?? "unknown" };
+  if (error) return { ok: false, code: logRpcError("request_withdrawal", error) };
   return { ok: true, id: typeof data === "string" ? data : "" };
 }
 
@@ -100,7 +109,7 @@ export async function cancelWithdrawal(
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc("cancel_withdrawal", { withdrawal_id: id });
 
-  if (error) return { ok: false, code: error.code ?? "unknown" };
+  if (error) return { ok: false, code: logRpcError("cancel_withdrawal", error) };
   return { ok: true };
 }
 
