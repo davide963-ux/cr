@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { RatesProvider } from "@/components/dashboard/RatesProvider";
+import { PanelGlow } from "@/components/dashboard/PanelGlow";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { adminPage, dashboardNav } from "@/data/content";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -32,7 +33,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     // Un solo provider per tutta l'area: i cambi si chiedono una volta sola,
     // non una per componente che li mostra.
     <RatesProvider>
-      <div className="min-h-dvh lg:pl-[17rem]">
+      <PanelGlow />
+      <div className="dash relative isolate min-h-dvh lg:pl-[17rem]">
+        {/* isolate + -z-10: l'alone resta dietro al contenuto di questo riquadro */}
+        <div aria-hidden="true" className="dash-aura -z-10" />
         <Sidebar items={items} balance={account.balance} currency={account.currency} />
         <main id="contenuto" tabIndex={-1} className="outline-none">
           <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">{children}</div>

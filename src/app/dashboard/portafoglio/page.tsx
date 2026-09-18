@@ -15,7 +15,7 @@ export default async function PortfolioPage() {
   if (!account) notFound();
 
   return (
-    <div className="space-y-8">
+    <div className="dash-stack space-y-8">
       <DashboardHeader title={walletPage.title} />
 
       {/* Stessi dati della dashboard: entrambe leggono da getAccount() */}

@@ -20,10 +20,20 @@
   --radius-control: 0.625rem;
 
   --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 24px 48px -24px rgb(0 0 0 / 0.7);
+  /* Alone al neon delle schede attive dell'area riservata */
+  --shadow-glow:
+    0 0 0 1px rgb(103 227 174 / 0.14),
+    0 0 30px -8px rgb(103 227 174 / 0.38),
+    0 22px 50px -26px rgb(103 227 174 / 0.45);
 
   --animate-draw: draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) 0.35s both;
   --animate-rise: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-travel: travel 4.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-halo: halo 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+
+  /* Curva unica per tutte le reazioni dell'interfaccia */
+  --ease-ui: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   @keyframes draw {
     from { stroke-dashoffset: 1; }
@@ -32,6 +42,15 @@
   @keyframes rise {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: none; }
+  }
+  @keyframes shimmer {
+    from { background-position: 180% 0; }
+    to { background-position: -180% 0; }
+  }
+  @keyframes halo {
+    0% { box-shadow: 0 0 0 0 rgb(103 227 174 / 0.5); }
+    70% { box-shadow: 0 0 0 7px rgb(103 227 174 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(103 227 174 / 0); }
   }
   @keyframes travel {
     0% { top: 0%; opacity: 0; }
@@ -62,6 +81,39 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius-panel);
   box-shadow: var(--shadow-panel);
+}
+
+/* Riquadro dell'icona: sfumatura, filo di luce in alto, contorno menta */
+@utility icon-tile {
+  background-image: linear-gradient(150deg, rgb(103 227 174 / 0.20), rgb(103 227 174 / 0.05));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    0 0 0 1px rgb(103 227 174 / 0.14),
+    0 8px 18px -10px rgb(103 227 174 / 0.55);
+  color: var(--color-mint);
+}
+
+/*
+ * Segnaposto luminoso per un valore che sta arrivando.
+ * Dice "sto caricando" meglio di un trattino, che sembra un dato assente.
+ */
+@utility skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-line) 0%,
+    var(--color-line-strong) 45%,
+    var(--color-line) 90%
+  );
+  background-size: 180% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: 0.5rem;
+  color: transparent;
+}
+
+/* Cifra d'accento con un accenno di luce attorno */
+@utility glow-mint {
+  color: var(--color-mint);
+  text-shadow: 0 0 26px rgb(103 227 174 / 0.35);
 }
 
 /* Reticolo tecnico dell'hero, sfumato ai bordi */
@@ -147,4 +199,128 @@
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ─────────────────── Area riservata: superfici reattive ─────────────────── */
+/*
+ * Scritte come discendenti di .dash invece che come utility sui componenti:
+ * ogni scheda usa già .panel, quindi il trattamento raggiunge anche quelle
+ * delle sottopagine senza modificarle una per una, e il sito pubblico resta
+ * com'è.
+ */
+/*
+ * Fuori da @layer di proposito.
+ *
+ * L'utility `panel` finisce nel livello "utilities", che nella cascata di
+ * Tailwind viene dopo "components": una regola in components perde contro di
+ * lei per livello, non per specificità, e il suo box-shadow resterebbe quello
+ * di base. Il CSS senza livello li supera tutti, quindi l'alone arriva.
+ */
+.dash {
+  scrollbar-color: var(--color-line-strong) transparent;
+  scrollbar-width: thin;
+}
+
+/* Alone ambientale: toglie al fondo la piattezza del nero pieno */
+.dash-aura {
+  position: absolute;
+  inset-inline: 0;
+  top: -12rem;
+  height: 32rem;
+  pointer-events: none;
+  background:
+    radial-gradient(38rem 20rem at 16% 0%, rgb(103 227 174 / 0.10), transparent 70%),
+    radial-gradient(28rem 18rem at 86% 6%, rgb(57 185 130 / 0.07), transparent 72%);
+}
+
+.dash .panel {
+  position: relative;
+  transition:
+    border-color 0.3s var(--ease-ui),
+    box-shadow 0.35s var(--ease-ui),
+    transform 0.35s var(--ease-ui);
+}
+
+/*
+ * Il bordo al neon.
+ *
+ * Due maschere sovrapposte in modalità "exclude" ritagliano dal riquadro
+ * tutto tranne la cornice di 1px: resta il solo perimetro, ed è lì che si
+ * vede il gradiente. Il centro del gradiente segue il puntatore tramite
+ * --mx/--my, così la luce nasce dal punto in cui il mouse entra invece di
+ * accendersi uniformemente. Senza JavaScript quelle variabili non esistono
+ * e il valore di ripiego centra l'alone: il bordo si illumina lo stesso.
+ *
+ * Le finestre modali sono escluse: sono già in primo piano e non devono
+ * sollevarsi al passaggio del mouse.
+ */
+.dash .panel:not(dialog)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    15rem 15rem at var(--mx, 50%) var(--my, 0%),
+    rgb(103 227 174 / 0.9),
+    rgb(103 227 174 / 0.25) 38%,
+    transparent 72%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-ui);
+  pointer-events: none;
+}
+
+/* focus-within e non solo hover: chi naviga da tastiera vede la stessa cosa */
+.dash .panel:not(dialog):hover,
+.dash .panel:not(dialog):focus-within {
+  border-color: color-mix(in oklab, var(--color-mint) 30%, var(--color-line));
+  box-shadow: var(--shadow-panel), var(--shadow-glow);
+}
+
+.dash .panel:not(dialog):hover::after,
+.dash .panel:not(dialog):focus-within::after {
+  opacity: 1;
+}
+
+/* Il sollevamento è l'unica parte che dipende dal movimento */
+@media (prefers-reduced-motion: no-preference) {
+  .dash .panel:not(dialog):hover,
+  .dash .panel:not(dialog):focus-within {
+    transform: translateY(-2px);
+  }
+
+  /* Entrata scaglionata: le schede arrivano una dopo l'altra, non tutte insieme */
+  .dash-stack > * {
+    animation: rise 0.7s var(--ease-ui) both;
+  }
+  .dash-stack > *:nth-child(1) { animation-delay: 0.04s; }
+  .dash-stack > *:nth-child(2) { animation-delay: 0.1s; }
+  .dash-stack > *:nth-child(3) { animation-delay: 0.16s; }
+  .dash-stack > *:nth-child(4) { animation-delay: 0.22s; }
+  .dash-stack > *:nth-child(5) { animation-delay: 0.28s; }
+  .dash-stack > *:nth-child(6) { animation-delay: 0.34s; }
+  .dash-stack > *:nth-child(7) { animation-delay: 0.4s; }
+  .dash-stack > *:nth-child(8) { animation-delay: 0.46s; }
+  /* Oltre l'ottava restano insieme, invece di ricadere a ritardo zero */
+  .dash-stack > *:nth-child(n + 9) { animation-delay: 0.5s; }
+}
+
+/* Righe di elenco: reazione più leggera, senza alone */
+.dash [data-row] {
+  transition:
+    background-color 0.2s var(--ease-ui),
+    border-color 0.2s var(--ease-ui);
+}
+.dash [data-row]:hover {
+  background-color: var(--color-panel-raised);
+  border-color: var(--color-line-strong);
 }

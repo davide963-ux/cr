@@ -15,7 +15,7 @@ export function TransactionHistory({ entries, currency }: { entries: LedgerEntry
     <section className="panel overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-5">
         <div className="flex items-center gap-3.5">
-          <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-card)] bg-mint/10 text-mint">
+          <span className="icon-tile grid size-10 shrink-0 place-items-center rounded-[var(--radius-card)]">
             <Icon name="document" size={19} />
           </span>
           <div>
@@ -25,7 +25,7 @@ export function TransactionHistory({ entries, currency }: { entries: LedgerEntry
         </div>
         {entries.length > 0 ? (
           <span className="inline-flex items-center gap-1.5 text-xs text-mint">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-mint motion-safe:animate-pulse" />
+            <span aria-hidden="true" className="motion-safe:animate-halo size-1.5 rounded-full bg-mint" />
             {dashboardHome.historyLive}
           </span>
         ) : null}
@@ -41,12 +41,15 @@ export function TransactionHistory({ entries, currency }: { entries: LedgerEntry
               return (
                 <li
                   key={entry.id}
+                  data-row=""
                   className="flex flex-wrap items-center gap-4 rounded-[var(--radius-card)] border border-line bg-panel-raised p-4"
                 >
                   <span
                     className={cn(
-                      "grid size-9 shrink-0 place-items-center rounded-full",
-                      positive ? "bg-mint/10 text-mint" : "bg-loss/10 text-loss",
+                      "grid size-9 shrink-0 place-items-center rounded-full ring-1",
+                      positive
+                        ? "bg-mint/10 text-mint ring-mint/20"
+                        : "bg-loss/10 text-loss ring-loss/20",
                     )}
                     aria-hidden="true"
                   >

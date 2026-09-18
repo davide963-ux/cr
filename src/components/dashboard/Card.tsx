@@ -12,7 +12,7 @@ interface CardProps {
 /** Pannello base dell'area riservata: stessa cornice usata in tutto il sito. */
 export function Card({ title, action, children, className }: CardProps) {
   return (
-    <section className={cn("panel p-6 transition-colors duration-200 hover:border-line-strong sm:p-7", className)}>
+    <section className={cn("panel p-6 sm:p-7", className)}>
       {title || action ? (
         <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
           {title ? <h2 className="font-wide text-base font-semibold text-paper">{title}</h2> : <span />}
@@ -27,7 +27,10 @@ export function Card({ title, action, children, className }: CardProps) {
 /** Coppia etichetta/valore, con trattino se il dato non c'è. */
 export function DataRow({ label, value }: { label: string; value: string | null }) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line py-3 last:border-0">
+    <div
+      data-row=""
+      className="-mx-2 flex flex-wrap items-baseline justify-between gap-2 rounded-[var(--radius-control)] border-b border-line px-2 py-3 last:border-0"
+    >
       <dt className="text-sm text-mist">{label}</dt>
       <dd className={cn("text-[0.9375rem]", value ? "text-paper" : "text-mist")}>{value ?? "—"}</dd>
     </div>

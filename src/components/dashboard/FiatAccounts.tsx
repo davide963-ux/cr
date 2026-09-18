@@ -3,6 +3,7 @@
 import { dashboardHome } from "@/data/content";
 import { formatAmount } from "@/lib/format";
 import { useRates, type Rates } from "./RatesProvider";
+import { Shimmer } from "./Shimmer";
 
 const CURRENCIES = [
   { code: "EUR", key: "eur", name: dashboardHome.fiat.eur, symbol: "€", tint: "#9AA8E8" },
@@ -32,12 +33,16 @@ export function FiatAccounts({ balance, currency }: { balance: number; currency:
           return (
             <article
               key={item.code}
-              className="panel p-5 transition-colors duration-200 hover:border-line-strong"
+              className="panel group p-5"
             >
               <div className="flex items-center gap-3">
                 <span
-                  className="grid size-9 shrink-0 place-items-center rounded-[var(--radius-card)] text-[0.9375rem] font-semibold"
-                  style={{ backgroundColor: `${item.tint}1f`, color: item.tint }}
+                  className="grid size-9 shrink-0 place-items-center rounded-[var(--radius-card)] text-[0.9375rem] font-semibold transition-transform duration-300 ease-[var(--ease-ui)] group-hover:scale-105"
+                  style={{
+                    backgroundImage: `linear-gradient(150deg, ${item.tint}30, ${item.tint}0d)`,
+                    boxShadow: `inset 0 1px 0 rgb(255 255 255 / 0.07), 0 0 0 1px ${item.tint}26, 0 8px 18px -10px ${item.tint}80`,
+                    color: item.tint,
+                  }}
                   aria-hidden="true"
                 >
                   {item.symbol}
@@ -49,7 +54,13 @@ export function FiatAccounts({ balance, currency }: { balance: number; currency:
               </div>
 
               <p className="font-wide tabular mt-5 text-2xl font-semibold text-paper">
-                {converted === null ? "—" : formatAmount(converted, item.code)}
+                {converted !== null ? (
+                  formatAmount(converted, item.code)
+                ) : rates.status === "loading" ? (
+                  <Shimmer label={dashboardHome.ratesLoading} className="h-7 w-32 align-middle" />
+                ) : (
+                  "—"
+                )}
               </p>
               <p className="mt-1 text-xs text-mist">
                 {rate === null
