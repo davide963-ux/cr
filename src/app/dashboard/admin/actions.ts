@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { adminPage } from "@/data/content";
-import { parseAmountToCents } from "@/lib/money";
+import { isPlausibleRate, parseAmountToCents } from "@/lib/money";
 import { sanitizeText } from "@/lib/sanitize";
 import { isSchemaMissing } from "@/lib/supabase/rpcError";
 import { getAccount } from "@/services/account/accountService";
@@ -56,8 +56,15 @@ export async function adjustBalanceAction(
   if (amountCents === null || amountCents === 0) return { error: adminPage.errors.invalidAmount };
   if (!reason) return { error: adminPage.errors.reasonRequired };
 
+  // Il cambio lo manda la pagina, che ce l'ha; il server lo verifica e
+  // rifà la conversione da sé invece di fidarsi dei satoshi altrui.
+  const rateCents = Number(formData.get("rate_eur_cents"));
+  if (!Number.isFinite(rateCents) || !isPlausibleRate(rateCents / 100)) {
+    return { error: adminPage.errors.rateMissing };
+  }
+
   const delta = direction === "credit" ? amountCents : -amountCents;
-  const result = await adjustBalance(targetUserId, delta, reason);
+  const result = await adjustBalance(targetUserId, delta, rateCents, reason);
   if (!result.ok) return { error: messageForCode(result.code) };
 
   revalidatePath("/dashboard/admin");

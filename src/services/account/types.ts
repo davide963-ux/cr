@@ -13,8 +13,15 @@ export interface AccountUser {
   lastName: string | null;
   phone: string | null;
   city: string | null;
-  /** Saldo in euro, derivato dai centesimi salvati nel database. */
-  balance: number;
+  /**
+   * Saldo in satoshi: è il dato di verità.
+   *
+   * L'importo in euro NON si conserva, si calcola al momento di mostrarlo
+   * moltiplicando per il cambio corrente. È l'unico modo perché "se il
+   * bitcoin sale del 5% il conto sale del 5%" sia vero per costruzione.
+   */
+  balanceSats: number;
+  /** Valuta in cui il controvalore viene mostrato. */
   currency: "EUR";
   /** null finché il wallet non è configurato: non inventare mai un indirizzo. */
   walletAddress: string | null;
@@ -32,8 +39,10 @@ export interface AccountUser {
 /** Riga del registro movimenti. */
 export interface LedgerEntry {
   id: string;
-  amount: number;
-  balanceAfter: number;
+  amountSats: number;
+  balanceAfterSats: number;
+  /** Prezzo di 1 BTC in centesimi al momento del movimento, dove noto. */
+  rateEurCents: number | null;
   reason: string;
   createdAt: string;
 }
@@ -45,7 +54,7 @@ export interface AdminUserRow {
   fullName: string | null;
   phone: string | null;
   city: string | null;
-  balance: number;
+  balanceSats: number;
   currency: string;
   isAdmin: boolean;
   createdAt: string;
@@ -57,7 +66,10 @@ export type WithdrawalStatus = "pending" | "approved" | "rejected" | "cancelled"
 /** Richiesta di prelievo, vista dall'utente che l'ha aperta. */
 export interface Withdrawal {
   id: string;
-  amount: number;
+  /** Quantità fissata alla richiesta: è ciò che l'utente riceverà. */
+  amountSats: number;
+  /** Cambio al momento della richiesta, per ricordare cosa aveva chiesto. */
+  requestedRateEurCents: number | null;
   /** null quando l'utente non l'ha indicata: si concorda con l'operatore. */
   destination: string | null;
   note: string | null;

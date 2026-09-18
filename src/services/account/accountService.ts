@@ -12,6 +12,11 @@ export function centsToUnits(cents: number | null | undefined): number {
   return typeof cents === "number" ? cents / 100 : 0;
 }
 
+/** Un intero di satoshi, o zero: mai NaN, mai un decimale. */
+export function readSats(value: number | null | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : 0;
+}
+
 /**
  * Traduce l'utente Supabase nella struttura usata dall'area riservata.
  *
@@ -34,7 +39,7 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
   const supabase = await createSupabaseServerClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, last_name, phone, city, balance_cents, currency, is_admin, declared_amount_cents")
+    .select("first_name, last_name, phone, city, balance_sats, currency, is_admin, declared_amount_cents")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -47,7 +52,7 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
       lastName: readString(meta.last_name),
       phone: readString(meta.phone),
       city: readString(meta.city),
-      balance: 0,
+      balanceSats: 0,
       currency: "EUR",
       walletAddress: null,
       declaredAmount: typeof meta.amount === "number" ? meta.amount : null,
@@ -68,7 +73,7 @@ export const getAccount = cache(async (): Promise<AccountUser | null> => {
     lastName,
     phone: readString(profile.phone),
     city: readString(profile.city),
-    balance: centsToUnits(profile.balance_cents),
+    balanceSats: readSats(profile.balance_sats),
     currency: "EUR",
     walletAddress: null,
     declaredAmount:
@@ -86,7 +91,7 @@ export async function getOwnLedger(limit = 10): Promise<LedgerEntry[]> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("ledger_entries")
-    .select("id, amount_cents, balance_after_cents, reason, created_at")
+    .select("id, amount_sats, balance_after_sats, rate_eur_cents, reason, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -94,35 +99,11 @@ export async function getOwnLedger(limit = 10): Promise<LedgerEntry[]> {
 
   return data.map((row) => ({
     id: row.id,
-    amount: centsToUnits(row.amount_cents),
-    balanceAfter: centsToUnits(row.balance_after_cents),
+    amountSats: readSats(row.amount_sats),
+    balanceAfterSats: readSats(row.balance_after_sats),
+    rateEurCents: typeof row.rate_eur_cents === "number" ? row.rate_eur_cents : null,
     reason: row.reason ?? "",
     createdAt: row.created_at ?? "",
   }));
 }
 
-/**
- * Variazione degli ultimi sette giorni, calcolata sui movimenti reali.
- *
- * La percentuale ha senso solo se il saldo di partenza non era zero: su un
- * conto vuoto qualunque accredito sarebbe una crescita infinita, quindi in
- * quel caso resta null e l'interfaccia mostra solo l'importo.
- */
-export async function getWeeklyChange(
-  currentBalance: number,
-): Promise<{ amount: number; percent: number | null } | null> {
-  const supabase = await createSupabaseServerClient();
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-  const { data, error } = await supabase
-    .from("ledger_entries")
-    .select("amount_cents")
-    .gte("created_at", since);
-
-  if (error || !data || data.length === 0) return null;
-
-  const amount = centsToUnits(data.reduce((sum, row) => sum + (row.amount_cents ?? 0), 0));
-  const startBalance = currentBalance - amount;
-  const percent = startBalance > 0 ? (amount / startBalance) * 100 : null;
-  return { amount, percent };
-}

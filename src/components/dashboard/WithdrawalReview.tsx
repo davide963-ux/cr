@@ -4,8 +4,8 @@ import { useActionState } from "react";
 import { decideWithdrawalAction } from "@/app/dashboard/admin/actions";
 import { Button } from "@/components/ui/Button";
 import { adminPage, withdrawPage } from "@/data/content";
-import { formatAmount } from "@/lib/format";
 import type { AdminWithdrawal } from "@/services/account/types";
+import { Money, Btc } from "./Money";
 import { WithdrawalStatus } from "./WithdrawalStatus";
 
 const control =
@@ -35,7 +35,9 @@ export function WithdrawalReview({ withdrawal }: { withdrawal: AdminWithdrawal }
           </p>
         </div>
         <div className="text-right">
-          <p className="font-wide tabular text-xl text-paper">{formatAmount(withdrawal.amount, "EUR")}</p>
+          <Btc sats={withdrawal.amountSats} className="font-wide tabular block text-xl text-paper" />
+          <Money sats={withdrawal.amountSats} className="tabular block text-sm text-mist" />
+          <p className="mt-0.5 text-[0.6875rem] text-mist/70">{adminPage.withdrawalAmountNote}</p>
           <div className="mt-1.5 flex justify-end">
             <WithdrawalStatus status={withdrawal.status} />
           </div>
@@ -136,7 +138,10 @@ export function WithdrawalRecord({ withdrawal }: { withdrawal: AdminWithdrawal }
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <span className="font-wide tabular text-paper">{formatAmount(withdrawal.amount, "EUR")}</span>
+          <span className="text-right">
+            <Btc sats={withdrawal.amountSats} className="font-wide tabular block text-paper" />
+            <Money sats={withdrawal.amountSats} className="tabular block text-xs text-mist" />
+          </span>
           <WithdrawalStatus status={withdrawal.status} />
         </div>
       </div>

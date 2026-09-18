@@ -81,11 +81,11 @@ function SignOut({ full = false }: { full?: boolean }) {
 
 export function Sidebar({
   items,
-  balance,
+  balanceSats,
   currency,
 }: {
   items: DashboardNavItem[];
-  balance: number;
+  balanceSats: number;
   currency: string;
 }) {
   const pathname = usePathname();
@@ -131,7 +131,7 @@ export function Sidebar({
         hidden={!open}
         className="fixed inset-x-0 bottom-0 top-16 z-40 overflow-y-auto border-t border-line bg-ink px-5 py-6 lg:hidden"
       >
-        <SidebarBalance balance={balance} currency={currency} />
+        <SidebarBalance balanceSats={balanceSats} currency={currency} />
         <nav aria-label={dashboardShell.navLabel} className="mt-6">
           <NavLinks pathname={pathname} items={items} onNavigate={() => setOpen(false)} />
         </nav>
@@ -146,7 +146,7 @@ export function Sidebar({
           <Logo />
         </div>
         <div className="mt-6">
-          <SidebarBalance balance={balance} currency={currency} />
+          <SidebarBalance balanceSats={balanceSats} currency={currency} />
         </div>
         <nav aria-label={dashboardShell.navLabel} className="mt-6 flex-1">
           <NavLinks pathname={pathname} items={items} />

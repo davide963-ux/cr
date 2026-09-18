@@ -4,6 +4,7 @@ import { AdjustBalanceForm } from "@/components/dashboard/AdjustBalanceForm";
 import { Card, EmptyState } from "@/components/dashboard/Card";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { RoleToggle } from "@/components/dashboard/RoleToggle";
+import { Money, Btc } from "@/components/dashboard/Money";
 import { WithdrawalRecord, WithdrawalReview } from "@/components/dashboard/WithdrawalReview";
 import { adminPage } from "@/data/content";
 import { formatAmount } from "@/lib/format";
@@ -30,7 +31,7 @@ export default async function AdminPage() {
     listRecentLedger(),
     listWithdrawals(),
   ]);
-  const totalBalance = users.reduce((sum, u) => sum + u.balance, 0);
+  const totalSats = users.reduce((sum, u) => sum + u.balanceSats, 0);
   const emailById = new Map(users.map((u) => [u.id, u.email]));
 
   // null = tabella assente, diverso da [] ("nessuna richiesta"): il pannello
@@ -51,7 +52,8 @@ export default async function AdminPage() {
         </Card>
         <Card>
           <p className="text-sm text-mist">{adminPage.totalBalance}</p>
-          <p className="font-display tabular mt-2 text-3xl text-paper">{formatAmount(totalBalance, "EUR")}</p>
+          <Money sats={totalSats} className="font-display tabular mt-2 block text-3xl text-paper" />
+          <Btc sats={totalSats} className="mt-1 block text-xs text-mist" />
         </Card>
         <Card>
           <p className="text-sm text-mist">{adminPage.pendingWithdrawals}</p>
@@ -108,9 +110,12 @@ export default async function AdminPage() {
                     ) : null}
                   </div>
                   <div className="text-right">
-                    <p className="tabular font-wide text-xl text-paper">
-                      {formatAmount(user.balance, user.currency)}
-                    </p>
+                    <Btc sats={user.balanceSats} className="tabular font-wide block text-xl text-paper" />
+                    <Money
+                      sats={user.balanceSats}
+                      currency={user.currency}
+                      className="tabular block text-sm text-mist"
+                    />
                     <p className="mt-1 text-xs text-mist">
                       {user.isAdmin ? adminPage.roleAdmin : adminPage.roleUser}
                     </p>
@@ -155,11 +160,19 @@ export default async function AdminPage() {
                       {new Date(entry.createdAt).toLocaleString("it-IT")}
                     </td>
                     <td className="break-all py-3 text-mist">{emailById.get(entry.userId) ?? entry.userId}</td>
-                    <td className={`tabular py-3 ${entry.amount >= 0 ? "text-mint" : "text-loss"}`}>
-                      {entry.amount >= 0 ? "+" : ""}
-                      {formatAmount(entry.amount, "EUR")}
+                    <td className={`tabular py-3 ${entry.amountSats >= 0 ? "text-mint" : "text-loss"}`}>
+                      <Btc sats={entry.amountSats} className="block" />
+                      {/* Il cambio di ALLORA, non quello di adesso: è il
+                          valore che aveva il movimento quando è avvenuto. */}
+                      <span className="block text-xs text-mist">
+                        {entry.rateEurCents === null
+                          ? "—"
+                          : formatAmount((entry.amountSats / 100_000_000) * (entry.rateEurCents / 100), "EUR")}
+                      </span>
                     </td>
-                    <td className="tabular py-3 text-paper">{formatAmount(entry.balanceAfter, "EUR")}</td>
+                    <td className="tabular py-3 text-paper">
+                      <Btc sats={entry.balanceAfterSats} />
+                    </td>
                     <td className="py-3 text-mist">{entry.reason}</td>
                   </tr>
                 ))}

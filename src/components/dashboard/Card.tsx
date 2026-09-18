@@ -25,7 +25,7 @@ export function Card({ title, action, children, className }: CardProps) {
 }
 
 /** Coppia etichetta/valore, con trattino se il dato non c'è. */
-export function DataRow({ label, value }: { label: string; value: string | null }) {
+export function DataRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div
       data-row=""

@@ -60,3 +60,43 @@ export function parseAmountToCents(input: string): number | null {
   const cents = Number(integerPart) * 100 + Number(fractionPart.padEnd(2, "0") || "0");
   return Number.isSafeInteger(cents) ? cents : null;
 }
+
+/** Un bitcoin in satoshi. Il saldo è sempre un intero di queste unità. */
+export const SATS_PER_BTC = 100_000_000;
+
+/**
+ * Estremi entro cui un cambio è un prezzo e non un errore, in euro per
+ * bitcoin. Gli stessi che applica il database: qui servono solo a non
+ * inviare una richiesta che verrebbe comunque respinta.
+ */
+export const MIN_BTC_RATE = 1_000;
+export const MAX_BTC_RATE = 1_000_000;
+
+export function isPlausibleRate(rate: number): boolean {
+  return Number.isFinite(rate) && rate >= MIN_BTC_RATE && rate <= MAX_BTC_RATE;
+}
+
+export function satsToBtc(sats: number): number {
+  return sats / SATS_PER_BTC;
+}
+
+/** Controvalore di una quantità di satoshi al cambio dato. */
+export function satsToCurrency(sats: number, rate: number): number {
+  return (sats / SATS_PER_BTC) * rate;
+}
+
+/**
+ * Da importo in euro a satoshi, per l'anteprima nel modulo.
+ *
+ * È la stessa formula che applica il database, ripetuta qui solo per
+ * mostrare in anticipo cosa succederà: il valore che conta lo ricalcola
+ * comunque il server, che non si fida di questa moltiplicazione.
+ */
+export function eurCentsToSats(cents: number, rate: number): number {
+  return Math.round((cents * SATS_PER_BTC) / (rate * 100));
+}
+
+/** Il cambio in centesimi, come lo vuole il database. */
+export function rateToCents(rate: number): number {
+  return Math.round(rate * 100);
+}

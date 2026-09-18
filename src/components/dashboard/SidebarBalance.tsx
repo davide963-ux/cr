@@ -2,14 +2,10 @@
 
 import { Icon } from "@/components/icons/Icon";
 import { dashboardHome } from "@/data/content";
-import { formatAmount, formatBtc } from "@/lib/format";
-import { useRates } from "./RatesProvider";
-import { Shimmer } from "./Shimmer";
+import { Money, Btc } from "./Money";
 
 /** Riepilogo del saldo in cima alla barra laterale, in bitcoin e in valuta. */
-export function SidebarBalance({ balance, currency }: { balance: number; currency: string }) {
-  const rates = useRates();
-  const btc = rates.status === "ready" ? balance / rates.rates.eur : null;
+export function SidebarBalance({ balanceSats, currency }: { balanceSats: number; currency: string }) {
 
   return (
     <div className="relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-panel-raised p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]">
@@ -24,16 +20,9 @@ export function SidebarBalance({ balance, currency }: { balance: number; currenc
         </p>
         <Icon name="wallet" size={14} className="shrink-0 text-mist" />
       </div>
-      <p className="font-wide tabular glow-mint mt-2.5 text-xl font-semibold">
-        {btc !== null ? (
-          formatBtc(btc)
-        ) : rates.status === "loading" ? (
-          <Shimmer label={dashboardHome.ratesLoading} className="h-6 w-32 align-middle" />
-        ) : (
-          "—"
-        )}
-      </p>
-      <p className="tabular mt-1 text-sm text-mist">{formatAmount(balance, currency)}</p>
+      {/* La quantità in bitcoin viene prima: è il saldo vero, non una stima. */}
+      <Btc sats={balanceSats} className="font-wide tabular glow-mint mt-2.5 block text-xl font-semibold" />
+      <Money sats={balanceSats} currency={currency} className="tabular mt-1 block text-sm text-mist" />
     </div>
   );
 }

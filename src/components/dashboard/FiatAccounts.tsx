@@ -2,6 +2,7 @@
 
 import { dashboardHome } from "@/data/content";
 import { formatAmount } from "@/lib/format";
+import { satsToBtc } from "@/lib/money";
 import { useRates, type Rates } from "./RatesProvider";
 import { Shimmer } from "./Shimmer";
 
@@ -18,9 +19,11 @@ const CURRENCIES = [
  * saldo in euro → bitcoin → valuta di destinazione. Senza i cambi le cifre
  * non vengono mostrate: meglio un trattino che un importo sbagliato.
  */
-export function FiatAccounts({ balance, currency }: { balance: number; currency: string }) {
+export function FiatAccounts({ balanceSats, currency }: { balanceSats: number; currency: string }) {
   const rates = useRates();
-  const btc = rates.status === "ready" ? balance / rates.rates.eur : null;
+  // Il saldo È già in bitcoin: non serve più convertirlo per arrivare
+  // alle altre valute, basta moltiplicare per il cambio di ciascuna.
+  const btc = satsToBtc(balanceSats);
 
   return (
     <section>
@@ -28,7 +31,7 @@ export function FiatAccounts({ balance, currency }: { balance: number; currency:
       <div className="mt-4 grid gap-4 md:grid-cols-3">
         {CURRENCIES.map((item) => {
           const rate = rates.status === "ready" ? rates.rates[item.key] : null;
-          const converted = btc !== null && rate !== null ? btc * rate : null;
+          const converted = rate !== null ? btc * rate : null;
 
           return (
             <article
