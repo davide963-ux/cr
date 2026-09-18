@@ -4,10 +4,11 @@ import { AdjustBalanceForm } from "@/components/dashboard/AdjustBalanceForm";
 import { Card, EmptyState } from "@/components/dashboard/Card";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { RoleToggle } from "@/components/dashboard/RoleToggle";
+import { WithdrawalRecord, WithdrawalReview } from "@/components/dashboard/WithdrawalReview";
 import { adminPage } from "@/data/content";
 import { formatAmount } from "@/lib/format";
 import { getAccount } from "@/services/account/accountService";
-import { listRecentLedger, listUsers } from "@/services/admin/adminService";
+import { listRecentLedger, listUsers, listWithdrawals } from "@/services/admin/adminService";
 
 export const metadata: Metadata = { title: adminPage.title };
 export const dynamic = "force-dynamic";
@@ -24,16 +25,24 @@ export default async function AdminPage() {
   if (!account) notFound();
   if (!account.isAdmin) notFound();
 
-  const [users, ledger] = await Promise.all([listUsers(), listRecentLedger()]);
+  const [users, ledger, withdrawals] = await Promise.all([
+    listUsers(),
+    listRecentLedger(),
+    listWithdrawals(),
+  ]);
   const totalBalance = users.reduce((sum, u) => sum + u.balance, 0);
   const emailById = new Map(users.map((u) => [u.id, u.email]));
+
+  // La coda da evadere e lo storico: due elenchi, non uno filtrato a vista.
+  const queue = withdrawals.filter((w) => w.status === "pending");
+  const settled = withdrawals.filter((w) => w.status !== "pending");
 
   return (
     <div className="dash-stack space-y-8">
       <DashboardHeader title={adminPage.title} />
       <p className="max-w-2xl text-mist">{adminPage.description}</p>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-3">
         <Card>
           <p className="text-sm text-mist">{adminPage.totalUsers}</p>
           <p className="font-display tabular mt-2 text-3xl text-paper">{users.length}</p>
@@ -42,7 +51,40 @@ export default async function AdminPage() {
           <p className="text-sm text-mist">{adminPage.totalBalance}</p>
           <p className="font-display tabular mt-2 text-3xl text-paper">{formatAmount(totalBalance, "EUR")}</p>
         </Card>
+        <Card>
+          <p className="text-sm text-mist">{adminPage.pendingWithdrawals}</p>
+          <p
+            className={`font-display tabular mt-2 text-3xl ${queue.length > 0 ? "glow-mint" : "text-paper"}`}
+          >
+            {queue.length}
+          </p>
+        </Card>
       </div>
+
+      {/* La coda sta in alto: è l'unica parte del pannello che aspetta qualcuno. */}
+      <Card title={adminPage.withdrawalsPendingTitle}>
+        {queue.length === 0 ? (
+          <EmptyState message={adminPage.withdrawalsPendingEmpty} icon="upload" />
+        ) : (
+          <ul className="space-y-4">
+            {queue.map((withdrawal) => (
+              <WithdrawalReview key={withdrawal.id} withdrawal={withdrawal} />
+            ))}
+          </ul>
+        )}
+      </Card>
+
+      <Card title={adminPage.withdrawalsHistoryTitle}>
+        {settled.length === 0 ? (
+          <EmptyState message={adminPage.withdrawalsEmpty} icon="document" />
+        ) : (
+          <ul className="space-y-3">
+            {settled.map((withdrawal) => (
+              <WithdrawalRecord key={withdrawal.id} withdrawal={withdrawal} />
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <Card title={adminPage.usersTitle}>
         {users.length === 0 ? (

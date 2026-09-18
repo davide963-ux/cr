@@ -333,6 +333,7 @@ export const dashboardContent = {
 export const dashboardNav: DashboardNavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "home" },
   { label: "Portafoglio", href: "/dashboard/portafoglio", icon: "wallet" },
+  { label: "Prelievi", href: "/dashboard/prelievi", icon: "upload" },
   { label: "Analitiche", href: "/dashboard/analitiche", icon: "chart" },
   { label: "Profilo", href: "/dashboard/profilo", icon: "user" },
   { label: "Sicurezza", href: "/dashboard/sicurezza", icon: "shield" },
@@ -519,7 +520,73 @@ export const documentsPage = {
 };
 
 /* ===========================================================================
- * 16. PANNELLO DI AMMINISTRAZIONE
+ * 16. PRELIEVI
+ * =========================================================================== */
+
+export const withdrawPage = {
+  title: "Prelievi",
+  description:
+    "Richiedi il trasferimento di una somma verso il tuo conto o portafoglio. Ogni richiesta viene verificata da un operatore prima di essere eseguita.",
+
+  availableLabel: "Saldo disponibile",
+  availableHint: "Quanto puoi richiedere adesso",
+  heldLabel: "In attesa di approvazione",
+  heldHint: "Già trattenuto dalle richieste aperte",
+
+  formTitle: "Nuova richiesta",
+  amountLabel: "Importo in euro",
+  amountPlaceholder: "250,00",
+  amountHint: "Usa la virgola per i decimali, ad esempio 1234,56.",
+  destinationLabel: "IBAN o indirizzo del portafoglio",
+  destinationPlaceholder: "IT60X0542811101000000123456",
+  destinationHint: "Dove vuoi ricevere la somma. Controlla bene: non possiamo recuperare un trasferimento inviato altrove.",
+  noteLabel: "Nota per l'operatore (facoltativa)",
+  notePlaceholder: "Prelievo per bonifico mensile",
+  submit: "Invia la richiesta",
+  pending: "Invio in corso…",
+  submitted: "Richiesta inviata. L'importo è stato trattenuto e resta in attesa di approvazione.",
+
+  holdNotice:
+    "L'importo viene trattenuto subito, così non è possibile richiedere due volte lo stesso denaro. Se la richiesta viene rifiutata o annullata, torna sul saldo.",
+
+  listTitle: "Le tue richieste",
+  listEmpty: "Non hai ancora richiesto prelievi.",
+  cancel: "Annulla",
+  cancelling: "Annullamento…",
+  cancelled: "Richiesta annullata: l'importo è tornato sul saldo.",
+
+  columns: {
+    date: "Data",
+    amount: "Importo",
+    destination: "Destinazione",
+    status: "Stato",
+    reason: "Esito",
+  },
+
+  status: {
+    pending: "In attesa",
+    approved: "Approvata",
+    rejected: "Rifiutata",
+    cancelled: "Annullata",
+  },
+
+  errors: {
+    notAuthorised: "Devi accedere per richiedere un prelievo.",
+    invalidAmount: "Importo non valido. Usa la virgola per i decimali, ad esempio 1234,56.",
+    destinationRequired: "Indica dove vuoi ricevere la somma.",
+    insufficient: "Fondi insufficienti: l'importo supera il saldo disponibile.",
+    outOfRange: "Importo fuori scala.",
+    tooManyPending: "Hai già cinque richieste in attesa. Attendi che vengano evase.",
+    notFound: "Richiesta non trovata.",
+    alreadyDecided: "Questa richiesta è già stata evasa.",
+    migrationMissing:
+      "Il database non è ancora predisposto: esegui supabase/migrations/0002_withdrawals.sql.",
+    generic: "Operazione non riuscita. Riprova.",
+  },
+};
+
+/* ===========================================================================
+ * 17. PANNELLO DI AMMINISTRAZIONE
  * =========================================================================== */
 
 export const adminPage = {
@@ -557,6 +624,26 @@ export const adminPage = {
   roleDone: "Ruolo aggiornato.",
   totalBalance: "Somma dei saldi",
   totalUsers: "Utenti registrati",
+  pendingWithdrawals: "Prelievi da evadere",
+
+  withdrawalsTitle: "Richieste di prelievo",
+  withdrawalsPendingTitle: "Da evadere",
+  withdrawalsHistoryTitle: "Richieste già evase",
+  withdrawalsEmpty: "Nessuna richiesta di prelievo.",
+  withdrawalsPendingEmpty: "Nessuna richiesta in attesa. Tutto evaso.",
+  withdrawalDestination: "Destinazione",
+  withdrawalNote: "Nota dell'utente",
+  withdrawalDecidedBy: "Evasa da",
+  approve: "Approva",
+  approving: "Approvazione…",
+  reject: "Rifiuta",
+  rejecting: "Rifiuto…",
+  decisionLabel: "Motivo del rifiuto",
+  decisionPlaceholder: "Manca il documento d'identità: allegalo e riprova.",
+  decisionHint:
+    "Obbligatorio per rifiutare, ed è il testo che l'utente legge. Se manca un documento, scrivi quale.",
+  approveDone: "Richiesta approvata. L'importo era già trattenuto e resta addebitato.",
+  rejectDone: "Richiesta rifiutata. L'importo è tornato sul saldo dell'utente.",
   migrationTitle: "Database non ancora predisposto",
   migrationBody:
     "Esegui supabase/migrations/0001_profiles_and_ledger.sql nell'SQL Editor di Supabase, poi assegna il primo amministratore.",
@@ -568,6 +655,8 @@ export const adminPage = {
     reasonRequired: "Indica il motivo del movimento.",
     outOfRange: "Importo fuori scala.",
     constraint: "Operazione rifiutata: il saldo non può diventare negativo.",
+    alreadyDecided: "Questa richiesta è già stata evasa da qualcun altro.",
+    decisionRequired: "Per rifiutare devi indicare il motivo.",
     migrationMissing: "Il database non è ancora predisposto: esegui la migrazione SQL.",
     generic: "Operazione non riuscita. Riprova.",
   },

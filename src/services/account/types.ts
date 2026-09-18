@@ -50,3 +50,27 @@ export interface AdminUserRow {
   isAdmin: boolean;
   createdAt: string;
 }
+
+/** Stato di una richiesta di prelievo, come definito nell'enum SQL. */
+export type WithdrawalStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+/** Richiesta di prelievo, vista dall'utente che l'ha aperta. */
+export interface Withdrawal {
+  id: string;
+  amount: number;
+  destination: string;
+  note: string | null;
+  status: WithdrawalStatus;
+  /** Motivo scritto dall'amministratore: presente solo sui rifiuti. */
+  decisionReason: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+}
+
+/** La stessa richiesta vista dal pannello, con l'utente a cui appartiene. */
+export interface AdminWithdrawal extends Withdrawal {
+  userId: string;
+  userEmail: string;
+  userName: string | null;
+  decidedBy: string | null;
+}
