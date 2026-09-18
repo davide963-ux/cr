@@ -1,16 +1,114 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons/Icon";
-import { TradingViewCredit, TradingViewWidget } from "@/components/ui/TradingViewWidget";
 import { FEATURED_ASSET } from "@/data/assets";
 import { dashboardHome } from "@/data/content";
+import { buildChartGeometry, CHART_VIEWBOX } from "@/lib/chart";
+import { cn } from "@/lib/cn";
+import { formatAmount, formatCompact, formatPercent } from "@/lib/format";
+
+interface Market {
+  price: number;
+  change24h: number;
+  marketCap: number;
+  high24h: number;
+  low24h: number;
+  volume24h: number;
+  dominance: number | null;
+  /** Ultime 24 ore, un punto all'ora. */
+  series: number[];
+}
+
+type State = { status: "loading" } | { status: "ready"; market: Market } | { status: "failed" };
+
+const MARKETS_URL =
+  "https://api.coingecko.com/api/v3/coins/markets?vs_currency=eur&ids=bitcoin&sparkline=true&price_change_percentage=24h";
+const GLOBAL_URL = "https://api.coingecko.com/api/v3/global";
+
+function num(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/** Ora locale del punto i-esimo, contando all'indietro dall'ultimo. */
+function hourLabel(index: number, total: number): string {
+  const date = new Date(Date.now() - (total - 1 - index) * 60 * 60 * 1000);
+  return `${date.getHours().toString().padStart(2, "0")}:00`;
+}
 
 /**
- * Prezzo e andamento del bitcoin.
+ * Prezzo del bitcoin, disegnato in casa invece che con un iframe.
  *
- * Il grafico è il widget TradingView già usato in homepage: i dati arrivano
- * dal browser del visitatore, quindi nessuna chiave e nessun limite di
- * richieste, e le cifre sono quelle del mercato, non nostre.
+ * L'embed di TradingView portava con sé il proprio tema e le proprie
+ * dimensioni, e restava un riquadro chiaro incollato dentro una scheda scura.
+ * Qui i dati arrivano da CoinGecko e il grafico è un SVG che usa i colori del
+ * sito, quindi la scheda è coerente con tutto il resto.
+ *
+ * La richiesta parte dal browser: CoinGecko rifiuta spesso gli IP dei
+ * datacenter, Vercel compreso.
  */
-export function BitcoinPanel() {
+export function BitcoinPanel({ currency = "EUR" }: { currency?: string }) {
+  const [state, setState] = useState<State>({ status: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const [marketsRes, globalRes] = await Promise.all([
+          fetch(MARKETS_URL, { signal: controller.signal }),
+          // La dominanza è un di più: se manca, la scheda resta utile.
+          fetch(GLOBAL_URL, { signal: controller.signal }).catch(() => null),
+        ]);
+        if (!marketsRes.ok) throw new Error(`HTTP ${marketsRes.status}`);
+
+        const body: unknown = await marketsRes.json();
+        const row = Array.isArray(body) ? (body[0] as Record<string, unknown> | undefined) : undefined;
+        if (!row) throw new Error("risposta vuota");
+
+        const price = num(row.current_price);
+        const change24h = num(row.price_change_percentage_24h);
+        if (price === null || change24h === null) throw new Error("dati incompleti");
+
+        const sparkline = row.sparkline_in_7d as { price?: unknown } | undefined;
+        const series = Array.isArray(sparkline?.price)
+          ? sparkline.price.map(num).filter((p): p is number => p !== null).slice(-24)
+          : [];
+
+        let dominance: number | null = null;
+        if (globalRes?.ok) {
+          const globalBody: unknown = await globalRes.json();
+          const data = (globalBody as { data?: { market_cap_percentage?: Record<string, unknown> } })?.data;
+          dominance = num(data?.market_cap_percentage?.btc);
+        }
+
+        setState({
+          status: "ready",
+          market: {
+            price,
+            change24h,
+            marketCap: num(row.market_cap) ?? 0,
+            high24h: num(row.high_24h) ?? 0,
+            low24h: num(row.low_24h) ?? 0,
+            volume24h: num(row.total_volume) ?? 0,
+            dominance,
+            series,
+          },
+        });
+      } catch (error) {
+        if (!controller.signal.aborted) setState({ status: "failed" });
+        void error;
+      }
+    })();
+
+    return () => controller.abort();
+  }, []);
+
+  const market = state.status === "ready" ? state.market : null;
+  const geometry = market && market.series.length > 1 ? buildChartGeometry(market.series) : null;
+  const positive = (market?.change24h ?? 0) >= 0;
+  const tint = FEATURED_ASSET.tint;
+
   return (
     <section className="panel overflow-hidden">
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-5">
@@ -23,41 +121,133 @@ export function BitcoinPanel() {
             <p className="text-sm text-mist">{dashboardHome.btcPanelSubtitle}</p>
           </div>
         </div>
-        <TradingViewCredit />
+        <a
+          href="https://www.coingecko.com/"
+          target="_blank"
+          rel="noopener nofollow"
+          className="text-xs text-mist transition-colors hover:text-paper"
+        >
+          {dashboardHome.btcPanelCredit}
+        </a>
       </header>
 
-      <TradingViewWidget
-        widget="symbol-overview"
-        className="h-[380px] w-full p-2 sm:h-[420px] sm:p-4"
-        config={{
-          symbols: [[FEATURED_ASSET.name, `${FEATURED_ASSET.tvSymbol}|1D`]],
-          chartOnly: false,
-          // `width`/`height` accanto ad `autosize`: è quello che genera il
-          // configuratore di TradingView, e copre le versioni del widget che
-          // ignorano l'uno o l'altro.
-          width: "100%",
-          height: "100%",
-          locale: "it",
-          colorTheme: "dark",
-          isTransparent: true,
-          // Le versioni recenti del widget leggono questo invece di
-          // `isTransparent`: senza, il riquadro resta bianco.
-          backgroundColor: "rgba(13, 21, 18, 0)",
-          autosize: true,
-          showVolume: false,
-          showMA: false,
-          hideDateRanges: false,
-          hideMarketStatus: false,
-          hideSymbolLogo: false,
-          scalePosition: "right",
-          scaleMode: "Normal",
-          fontFamily: "inherit",
-          fontSize: "12",
-          chartType: "area",
-          lineWidth: 2,
-          gridLineColor: "rgba(255, 255, 255, 0.06)",
-        }}
-      />
+      <div className="p-6">
+        {state.status === "failed" ? (
+          <p className="py-10 text-center text-sm text-mist">{dashboardHome.btcPanelUnavailable}</p>
+        ) : (
+          <>
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+              <div>
+                <dt className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-mist">
+                  {dashboardHome.btcCurrentPrice}
+                </dt>
+                <dd className="font-wide tabular mt-1 text-xl font-semibold text-paper">
+                  {market ? formatAmount(market.price, currency) : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-mist">
+                  {dashboardHome.btcChange}
+                </dt>
+                <dd
+                  className={cn(
+                    "font-wide tabular mt-1 text-xl font-semibold",
+                    market ? (positive ? "text-mint" : "text-loss") : "text-paper",
+                  )}
+                >
+                  {market ? `${positive ? "↑ +" : "↓ −"}${formatPercent(Math.abs(market.change24h))}` : "—"}
+                </dd>
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <dt className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-mist">
+                  {dashboardHome.btcMarketCap}
+                </dt>
+                <dd className="font-wide tabular mt-1 text-xl font-semibold text-paper">
+                  {market ? formatCompact(market.marketCap, currency) : "—"}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="relative mt-6 h-[220px] rounded-[var(--radius-card)] border border-line bg-panel-raised/40">
+              {geometry ? (
+                <>
+                  {/* Griglia ed etichette in HTML: restano nitide mentre l'SVG si deforma */}
+                  {geometry.ticks.map((tick) => (
+                    <div
+                      key={tick.topPercent}
+                      className="pointer-events-none absolute inset-x-0 flex items-center"
+                      style={{ top: `${tick.topPercent}%` }}
+                    >
+                      <span className="tabular w-[5.5rem] shrink-0 -translate-y-1/2 pl-3 text-[0.6875rem] text-mist/80">
+                        {formatAmount(tick.value, currency)}
+                      </span>
+                      <span className="h-px flex-1 bg-line" />
+                    </div>
+                  ))}
+
+                  <svg
+                    viewBox={CHART_VIEWBOX}
+                    preserveAspectRatio="none"
+                    aria-label={dashboardHome.btcChartLabel}
+                    role="img"
+                    className="absolute inset-y-0 left-[5.5rem] right-0 h-full w-[calc(100%-5.5rem)]"
+                  >
+                    <defs>
+                      <linearGradient id="btc-area" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={tint} stopOpacity="0.28" />
+                        <stop offset="100%" stopColor={tint} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={geometry.area} fill="url(#btc-area)" />
+                    <path
+                      d={geometry.line}
+                      fill="none"
+                      stroke={tint}
+                      strokeWidth={1.75}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                </>
+              ) : (
+                <p className="grid h-full place-items-center text-sm text-mist">
+                  {state.status === "loading" ? dashboardHome.btcPanelLoading : dashboardHome.btcPanelUnavailable}
+                </p>
+              )}
+            </div>
+
+            {geometry && market ? (
+              <div className="ml-[5.5rem] mt-2 flex justify-between text-[0.6875rem] text-mist/80">
+                {[0, 6, 12, 18, market.series.length - 1].map((i) => (
+                  <span key={i} className="tabular">
+                    {hourLabel(i, market.series.length)}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] border border-line bg-line sm:grid-cols-4">
+              {[
+                { label: dashboardHome.btcHigh, value: market ? formatAmount(market.high24h, currency) : "—" },
+                { label: dashboardHome.btcLow, value: market ? formatAmount(market.low24h, currency) : "—" },
+                { label: dashboardHome.btcVolume, value: market ? formatCompact(market.volume24h, currency) : "—" },
+                {
+                  label: dashboardHome.btcDominance,
+                  value: market?.dominance != null ? formatPercent(market.dominance, 1) : "—",
+                },
+              ].map((item) => (
+                <div key={item.label} className="bg-panel p-4">
+                  <dt className="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-mist">
+                    {item.label}
+                  </dt>
+                  <dd className="tabular mt-1 text-[0.9375rem] text-paper">{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
+      </div>
     </section>
   );
 }

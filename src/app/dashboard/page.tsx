@@ -41,7 +41,7 @@ export default async function DashboardPage() {
 
       <QuickActions />
 
-      <BitcoinPanel />
+      <BitcoinPanel currency={account.currency} />
 
       <FiatAccounts balance={account.balance} currency={account.currency} />
 

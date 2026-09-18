@@ -64,3 +64,30 @@ export function formatDate(iso: string): string {
   return dateFmt.format(new Date(iso));
 }
 
+
+const COMPACT_STEPS = [
+  { limit: 1e12, suffix: "Bln" },
+  { limit: 1e9, suffix: "Mld" },
+  { limit: 1e6, suffix: "Mln" },
+] as const;
+
+/**
+ * Importi grandi in forma breve, es. 1,35 Bln €.
+ * Costruito a mano come gli altri: la notazione "compact" di ICU differisce
+ * fra Node e browser, e queste cifre finiscono anche nell'HTML del server.
+ */
+export function formatCompact(value: number, currencyCode: string): string {
+  const abs = Math.abs(value);
+  const step = COMPACT_STEPS.find((s) => abs >= s.limit);
+  if (!step) return formatAmount(value, currencyCode);
+
+  const scaled = value / step.limit;
+  const { sign, whole, fraction } = splitFixed(scaled, 2);
+  return `${sign}${whole},${fraction} ${step.suffix} ${SYMBOLS[currencyCode] ?? currencyCode}`;
+}
+
+/** Percentuale con virgola decimale, es. 2,33%. Il segno lo aggiunge chi chiama. */
+export function formatPercent(value: number, decimals = 2): string {
+  const { sign, whole, fraction } = splitFixed(value, decimals);
+  return `${sign}${whole},${fraction}%`;
+}
