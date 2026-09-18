@@ -34,7 +34,6 @@ export function WithdrawForm({ available, currency }: { available: number; curre
         <Field
           name="destination"
           label={withdrawPage.destinationLabel}
-          required
           placeholder={withdrawPage.destinationPlaceholder}
           maxLength={200}
           autoComplete="off"

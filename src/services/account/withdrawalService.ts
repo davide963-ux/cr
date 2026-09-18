@@ -29,7 +29,7 @@ export function toWithdrawal(row: WithdrawalRow): Withdrawal {
   return {
     id: row.id,
     amount: centsToUnits(row.amount_cents),
-    destination: row.destination ?? "",
+    destination: row.destination?.trim() || null,
     note: row.note,
     status: toStatus(row.status),
     decisionReason: row.decision_reason,
@@ -79,7 +79,7 @@ export function heldTotal(withdrawals: Withdrawal[]): number {
  */
 export async function requestWithdrawal(
   amountCents: number,
-  destination: string,
+  destination: string | null,
   note: string | null,
 ): Promise<{ ok: true; id: string } | { ok: false; code: string }> {
   const supabase = await createSupabaseServerClient();

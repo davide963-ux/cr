@@ -52,9 +52,10 @@ export function WithdrawalList({ entries, currency }: { entries: Withdrawal[]; c
               <p className="tabular mt-1 text-xs text-mist">
                 {new Date(entry.createdAt).toLocaleString("it-IT")}
               </p>
+              {/* Senza destinazione la riga resterebbe vuota: lo dice invece di tacere */}
               <p className="mt-2 break-all text-sm text-mist">
                 <span className="text-mist/70">{withdrawPage.columns.destination}: </span>
-                {entry.destination}
+                {entry.destination ?? <em className="not-italic">{withdrawPage.destinationMissing}</em>}
               </p>
             </div>
 

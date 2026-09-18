@@ -58,7 +58,8 @@ export type WithdrawalStatus = "pending" | "approved" | "rejected" | "cancelled"
 export interface Withdrawal {
   id: string;
   amount: number;
-  destination: string;
+  /** null quando l'utente non l'ha indicata: si concorda con l'operatore. */
+  destination: string | null;
   note: string | null;
   status: WithdrawalStatus;
   /** Motivo scritto dall'amministratore: presente solo sui rifiuti. */

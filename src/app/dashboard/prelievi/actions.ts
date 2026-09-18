@@ -59,9 +59,9 @@ export async function requestWithdrawalAction(
   const note = sanitizeText(formData.get("note"), 500);
 
   if (amountCents === null || amountCents <= 0) return { error: withdrawPage.errors.invalidAmount };
-  if (!destination) return { error: withdrawPage.errors.destinationRequired };
 
-  const result = await requestWithdrawal(amountCents, destination, note || null);
+  // La destinazione è facoltativa: se manca, la concorda l'operatore.
+  const result = await requestWithdrawal(amountCents, destination || null, note || null);
   if (!result.ok) return { error: messageForCode(result.code) };
 
   revalidatePath("/dashboard/prelievi");

@@ -45,7 +45,9 @@ export function WithdrawalReview({ withdrawal }: { withdrawal: AdminWithdrawal }
       <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
         <div className="flex flex-wrap gap-x-2">
           <dt className="text-mist">{adminPage.withdrawalDestination}:</dt>
-          <dd className="break-all text-paper">{withdrawal.destination}</dd>
+          <dd className="break-all text-paper">
+            {withdrawal.destination ?? withdrawPage.destinationMissing}
+          </dd>
         </div>
         {withdrawal.note ? (
           <div className="flex flex-wrap gap-x-2">
@@ -54,6 +56,16 @@ export function WithdrawalReview({ withdrawal }: { withdrawal: AdminWithdrawal }
           </div>
         ) : null}
       </dl>
+
+      {/*
+        Una richiesta senza destinazione non dice dove mandare il denaro:
+        va detto prima dei pulsanti, non nascosto in una riga di dettaglio.
+      */}
+      {withdrawal.destination ? null : (
+        <p className="mt-3 rounded-[var(--radius-control)] border border-[#E9A24B]/30 bg-[#E9A24B]/[0.08] p-3 text-sm text-[#E9A24B]">
+          {adminPage.withdrawalDestinationMissing}
+        </p>
+      )}
 
       <form action={formAction} className="mt-4 space-y-3 border-t border-line pt-4">
         <input type="hidden" name="withdrawal_id" value={withdrawal.id} />
@@ -120,7 +132,7 @@ export function WithdrawalRecord({ withdrawal }: { withdrawal: AdminWithdrawal }
           </p>
           <p className="mt-1.5 break-all text-sm text-mist">
             <span className="text-mist/70">{withdrawPage.columns.destination}: </span>
-            {withdrawal.destination}
+            {withdrawal.destination ?? withdrawPage.destinationMissing}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
